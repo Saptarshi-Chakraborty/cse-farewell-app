@@ -1,4 +1,4 @@
-import { Client, Account, Databases } from "appwrite";
+import { Client, Account, Databases, ID } from "appwrite";
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT as string)
@@ -7,4 +7,14 @@ const client = new Client()
 const account = new Account(client);
 const databases = new Databases(client);
 
-export { client, account, databases };
+const deleteSession = async () => {
+  try {
+    await account.deleteSession('current');
+    return true;
+  } catch (error) {
+    console.error('Logout error:', error);
+    return false;
+  }
+};
+
+export { client, account, databases, ID, deleteSession };
