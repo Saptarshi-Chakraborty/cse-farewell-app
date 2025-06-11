@@ -1,18 +1,19 @@
-import { useRouter } from "next/navigation";
-import {
-  User,
-  Mail,
-  ScrollText,
-  Utensils,
-  CircleDollarSign,
-  QrCode,
-} from "lucide-react";
-import { useGlobalContext } from "@/context/GlobalContext";
-import Header from "@/components/Header";
+
 import Footer from "@/components/Footer";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Page } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useGlobalContext } from "@/context/GlobalContext";
+import {
+  CircleDollarSign,
+  Mail,
+  QrCode,
+  ScrollText,
+  User,
+  Utensils,
+} from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 const retroStyle =
   "border-2 border-black shadow-[4px_4px_0px_#2A2A2A] transition-all hover:shadow-[2px_2px_0px_#2A2A2A]";
@@ -21,37 +22,20 @@ const ProfilePage = () => {
   const router = useRouter();
   const { user } = useGlobalContext();
 
-  const handlePageChange = (page: Page) => {
-    switch (page) {
-      case "stats":
-        router.push("/stats");
-        break;
-      case "students":
-        router.push("/students");
-        break;
-      case "scan":
-        router.push("/scan");
-        break;
-      case "login":
-        router.push("/login");
-        break;
-      default:
-        router.push("/");
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
     }
-  };
+  }, [user, router]);
+
+  if (!user) {
+    return null; // Prevent flash of content while redirecting
+  }
 
   return (
     <>
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
-        body {
-          font-family: "VT323", monospace;
-          background-color: #fdf6e3;
-          color: #2a2a2a;
-        }
-      `}</style>
       <div className="p-4 md:p-8">
-        <Header activePage="profile" onPageChange={handlePageChange} />
+        <Header />
 
         <main className="max-w-4xl mx-auto space-y-8">
           <h2 className="text-3xl border-b-2 border-black pb-2">

@@ -1,11 +1,11 @@
 // /app/scan/page.tsx
-"use client";
+// "use client";
 
 import { useState, useEffect } from "react";
 import { ScanQrCode as QrCodeScanner } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 
 type Page = "stats" | "students" | "scan" | "login";
 
@@ -19,28 +19,6 @@ export default function ScanQrPage() {
     food: string;
     status: string;
   } | null>(null);
-
-  const handlePageChange = (page: Page) => {
-    switch (page) {
-      case "stats":
-        router.push("/stats");
-        break;
-      case "students":
-        router.push("/students");
-        break;
-      case "scan":
-        router.push("/scan");
-        break;
-
-      case "login":
-        router.push("/login");
-        break;
-
-      default:
-        router.push("/");
-        break;
-    }
-  };
 
   // Effect to simulate QR scan when the page loads
   useEffect(() => {
@@ -57,16 +35,8 @@ export default function ScanQrPage() {
 
   return (
     <>
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
-        body {
-          font-family: "VT323", monospace;
-          background-color: #fdf6e3;
-          color: #2a2a2a;
-        }
-      `}</style>
       <div className="p-4 md:p-8">
-        <Header activePage="scan" onPageChange={handlePageChange} />
+        <Header />
 
         <main id="main-content">
           <section className="text-center space-y-8">
