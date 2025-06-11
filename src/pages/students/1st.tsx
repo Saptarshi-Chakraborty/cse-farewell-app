@@ -5,18 +5,17 @@ import Header from "@/components/Header";
 import StudentsPageBody from "@/components/Students/Body";
 import Head from "next/head";
 
-const FourthYearStudents = () => {
+const FirstYearStudents = () => {
 
   return (
     <>
       <Head>
-        <title>4th year students</title>
+        <title>1st year students</title>
       </Head>
-      
       <div className="p-4 md:p-8">
         <Header />
         <StudentsPageBody
-          year="4"
+          year="1"
         />
         <Footer />
       </div>
@@ -25,4 +24,4 @@ const FourthYearStudents = () => {
   );
 };
 
-export default FourthYearStudents;
+export default FirstYearStudents;

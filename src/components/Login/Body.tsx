@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -5,11 +7,13 @@ import { Mail, Key } from "lucide-react";
 import { account, ID } from "@/lib/appwrite";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/router";
 
 const retroStyle =
   "border-2 border-black shadow-[4px_4px_0px_#2A2A2A] transition-all hover:shadow-[2px_2px_0px_#2A2A2A]";
 
 const LoginPageBody = () => {
+  const router = useRouter();
   const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -63,6 +67,15 @@ const LoginPageBody = () => {
       const session = await account.createSession(userId, otp);
       const currentUser = await account.get();
       setUser(currentUser);
+
+      // Check for admin label
+      const userLabels = currentUser.labels || [];
+      if (userLabels.includes("admin")) {
+        router.push("/dashboard");
+      } else {
+        router.push("/profile");
+      }
+
       console.log("Session created:", session);
       alert("OTP Verified! You are now logged in.");
       // Optionally, update global context or redirect user after login

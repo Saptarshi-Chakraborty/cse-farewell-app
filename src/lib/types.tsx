@@ -1,7 +1,7 @@
 export type Page = "stats" | "students" | "scan" | "login" | "profile";
 
 export type Student = {
-  id: number;
+  $id: string;
   name: string;
   email: string;
   year: undefined | string | null;
