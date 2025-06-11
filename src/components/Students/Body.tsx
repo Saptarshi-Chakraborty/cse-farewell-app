@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StudentDialog from "./StudentDialog";
 import {
   DATABASE_ID,
@@ -31,6 +31,15 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const getStats = () => {
+    const vegCount = students.filter((s) => s.food_preference === "veg").length;
+    const nonVegCount = students.filter(
+      (s) => s.food_preference === "non-veg"
+    ).length;
+    const paidCount = students.filter((s) => s.payment_method).length;
+    return { vegCount, nonVegCount, paidCount };
+  };
 
   async function fetchStudents() {
     setLoading(true);
@@ -68,10 +77,10 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
     }
   };
 
-  const handleSaveStudent = (newStudent: Omit<Student, "id">) => {
-    setStudents((prev) => [...prev, { ...newStudent, id: Date.now() }]);
-    setIsModalOpen(false);
-  };
+  // Fetch students when the component mounts
+  useEffect(() => {
+    fetchStudents();
+  }, [year]);
 
   return (
     <main id="main-content">
@@ -94,6 +103,32 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
             </Button>
           </div>
         </div>
+
+        {students.length > 0 && (
+          <Card className={`${retroStyle} p-4`}>
+            <div className="flex justify-around items-center">
+              <div className="text-center">
+                <p className="text-lg font-bold text-green-600">
+                  {getStats().vegCount}
+                </p>
+                <p className="text-sm">Veg</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-red-600">
+                  {getStats().nonVegCount}
+                </p>
+                <p className="text-sm">Non-Veg</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-blue-600">
+                  {getStats().paidCount}
+                </p>
+                <p className="text-sm">Paid Students</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
         <Card className={retroStyle}>
           <Table>
             <TableHeader>
