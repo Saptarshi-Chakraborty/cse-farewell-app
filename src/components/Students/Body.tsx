@@ -5,6 +5,7 @@ import { retroStyle } from "@/lib/styles";
 import { Pencil, PlusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/retroui/Button";
 import { Card } from "@/components/retroui/Card";
+import { useRouter } from "next/router";
 import {
   Table,
   TableBody,
@@ -28,6 +29,7 @@ type StudentsPageBodyProps = {
 };
 
 const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
+  const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -99,10 +101,19 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
     }
   };
 
-  // Fetch students when the component mounts
+  // Check authentication and fetch students
   useEffect(() => {
+    // Check if user is authenticated (you need to implement your own auth check)
+    const isAuthenticated = false; // Replace this with your actual auth check
+    const isAdmin = false; // Replace this with your actual admin check
+
+    if (!isAuthenticated || !isAdmin) {
+      router.push("/login");
+      return;
+    }
+
     fetchStudents();
-  }, [year]);
+  }, [year, router]);
 
   return (
     <main id="main-content">

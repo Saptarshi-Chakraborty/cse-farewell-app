@@ -1,3 +1,4 @@
+// /context/GlobalContext.tsx
 import {
   createContext,
   useState,
@@ -28,7 +29,9 @@ type GlobalContextProviderProps = {
 export function GlobalContextProvider({
   children,
 }: GlobalContextProviderProps) {
-  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
+  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(
+    null
+  );
   const [session, setSession] = useState<any>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
@@ -50,7 +53,7 @@ export function GlobalContextProvider({
     } finally {
       setIsCheckingAuth(false);
     }
-  }, [isCheckingAuth]); // Remove user dependency
+  }, []); // Correct: Dependency array is empty
 
   return (
     <GlobalContext.Provider

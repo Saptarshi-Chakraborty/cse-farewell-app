@@ -2,28 +2,56 @@
 "use client";
 
 import { Button } from "@/components/retroui/Button";
+import { Select } from "@/components/retroui/Select";
 import { useEffect, useState } from "react";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { LogOut, Menu, LogIn } from "lucide-react";
 import { deleteSession } from "@/lib/appwrite";
 import { Page } from "@/lib/types";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/router"; // Correct: Use router from 'next/router'
 import Link from "next/link";
 import { Text } from "./retroui/Text";
 
 export default function Header() {
   const { checkAuth, user } = useGlobalContext();
   const router = useRouter();
-  const pathname = usePathname();
+  const { pathname } = router; // Correct: Get pathname from the router instance
   const [activePage, setActivePage] = useState<Page>("stats");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
-    // Set active page based on pathname
     const path = pathname.replace("/", "") as Page;
     if (path) setActivePage(path);
-  }, [pathname]);
+  }, [checkAuth, pathname]);
+
+  useEffect(() => {
+    if (user && pathname === '/login') {
+      if (user.labels && user.labels.includes('admin')) {
+        router.push('/dashboard');
+      } else {
+        router.push('/profile');
+      }
+    }
+  }, [user, pathname, router]);
+
+  useEffect(() => {
+    // For non-admin users, restrict access to only profile and home pages
+    if (user && (!user.labels || !user.labels.includes('admin'))) {
+      if (pathname !== '/profile' && pathname !== '/login' && pathname !== '/') {
+        router.push('/profile');
+      }
+    }
+  }, [user, pathname, router]);
+
+  useEffect(() => {
+    // For logged-out users, restrict access to only login and home pages
+    if (!user) {
+      if (pathname !== '/login' && pathname !== '/') {
+        router.push('/login');
+      }
+    }
+  }, [user, pathname, router]);
 
   const handlePageChange = (page: Page) => {
     setActivePage(page);
@@ -32,13 +60,19 @@ export default function Header() {
 
   const handleLogout = async () => {
     await deleteSession();
-    checkAuth();
+    await checkAuth(); // Re-check auth after logout to update state
     router.push("/login");
   };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  const handleStudentYearSelect = (year: string) => {
+    handlePageChange(`students/${year}` as Page);
+  };
+
+  const isAdmin = user?.labels?.includes('admin');
 
   return (
     <header className="relative">
@@ -49,32 +83,50 @@ export default function Header() {
 
         {user ? (
           <>
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-2">
-              <Button
-                variant={activePage === "stats" ? "default" : "outline"}
-                size="sm"
-                className="uppercase"
-                onClick={() => handlePageChange("stats")}
-              >
-                Stats
-              </Button>
-              <Button
-                variant={activePage === "students" ? "default" : "outline"}
-                size="sm"
-                className="uppercase"
-                onClick={() => handlePageChange("students")}
-              >
-                Students
-              </Button>
-              <Button
-                variant={activePage === "scan" ? "default" : "outline"}
-                size="sm"
-                className="uppercase"
-                onClick={() => handlePageChange("scan")}
-              >
-                Scan QR
-              </Button>
+            <div className="hidden md:flex items-center space-x-4">
+              {/* Desktop Navigation for Admins */}
+              {isAdmin && (
+                <nav className="flex space-x-2">
+                  <Button
+                    variant={activePage === "dashboard" ? "default" : "outline"}
+                    size="sm"
+                    className="uppercase"
+                    onClick={() => handlePageChange("dashboard" as Page)}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button
+                    variant={activePage === "stats" ? "default" : "outline"}
+                    size="sm"
+                    className="uppercase"
+                    onClick={() => handlePageChange("stats" as Page)}
+                  >
+                    Stats
+                  </Button>
+                  <Select onValueChange={handleStudentYearSelect}>
+                    <Select.Trigger className="uppercase">
+                      <Select.Value placeholder="Students" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Group>
+                        <Select.Item value="1st">First Year</Select.Item>
+                        <Select.Item value="2nd">Second Year</Select.Item>
+                        <Select.Item value="3rd">Third Year</Select.Item>
+                        <Select.Item value="4th">Fourth Year</Select.Item>
+                      </Select.Group>
+                    </Select.Content>
+                  </Select>
+                  <Button
+                    variant={activePage === "scan" ? "default" : "outline"}
+                    size="sm"
+                    className="uppercase"
+                    onClick={() => handlePageChange("scan")}
+                  >
+                    Scan QR
+                  </Button>
+                </nav>
+              )}
+              {/* Logout Button for all logged in users */}
               <Button
                 variant="outline"
                 size="sm"
@@ -84,7 +136,7 @@ export default function Header() {
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </Button>
-            </nav>
+            </div>
 
             {/* Mobile Hamburger */}
             <button className="md:hidden" onClick={toggleMobileMenu}>
@@ -93,53 +145,54 @@ export default function Header() {
 
             {/* Mobile Menu */}
             <div
-              className={`
-              fixed top-0 right-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-              ${
+              className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
                 isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
-              }
-              md:hidden z-50 p-4
-            `}
+              } md:hidden z-50 p-4`}
             >
               <div className="flex flex-col space-y-4">
-                <Button
-                  variant={activePage === "stats" ? "default" : "outline"}
-                  className="uppercase w-full"
-                  onClick={() => {
-                    handlePageChange("stats");
-                    toggleMobileMenu();
-                  }}
-                >
-                  Stats
-                </Button>
-                <Button
-                  variant={activePage === "students" ? "default" : "outline"}
-                  className="uppercase w-full"
-                  onClick={() => {
-                    handlePageChange("students");
-                    toggleMobileMenu();
-                  }}
-                >
-                  Students
-                </Button>
-                <Button
-                  variant={activePage === "scan" ? "default" : "outline"}
-                  className="uppercase w-full"
-                  onClick={() => {
-                    handlePageChange("scan");
-                    toggleMobileMenu();
-                  }}
-                >
-                  Scan QR
-                </Button>
+                {isAdmin && (
+                  <>
+                    <Button
+                      variant={activePage === "dashboard" ? "default" : "outline"}
+                      className="uppercase w-full"
+                      onClick={() => { handlePageChange("dashboard"); toggleMobileMenu(); }}
+                    >
+                      Dashboard
+                    </Button>
+                    <Button
+                      variant={activePage === "stats" ? "default" : "outline"}
+                      className="uppercase w-full"
+                      onClick={() => { handlePageChange("stats"); toggleMobileMenu(); }}
+                    >
+                      Stats
+                    </Button>
+                    <Select onValueChange={(value) => { handleStudentYearSelect(value); toggleMobileMenu(); }}>
+                      <Select.Trigger className="uppercase w-full">
+                        <Select.Value placeholder="Students" />
+                      </Select.Trigger>
+                      <Select.Content>
+                        <Select.Group>
+                          <Select.Item value="1st">First Year</Select.Item>
+                          <Select.Item value="2nd">Second Year</Select.Item>
+                          <Select.Item value="3rd">Third Year</Select.Item>
+                          <Select.Item value="4th">Fourth Year</Select.Item>
+                        </Select.Group>
+                      </Select.Content>
+                    </Select>
+                    <Button
+                      variant={activePage === "scan" ? "default" : "outline"}
+                      className="uppercase w-full"
+                      onClick={() => { handlePageChange("scan"); toggleMobileMenu(); }}
+                    >
+                      Scan QR
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   className="uppercase bg-red-100 hover:bg-red-200 w-full"
-                  onClick={() => {
-                    handleLogout();
-                    toggleMobileMenu();
-                  }}
+                  onClick={() => { handleLogout(); toggleMobileMenu(); }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
@@ -160,10 +213,9 @@ export default function Header() {
         )}
       </div>
 
-      {/* Overlay when mobile menu is open */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/20  bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 bg-opacity-50 z-40 md:hidden"
           onClick={toggleMobileMenu}
         />
       )}

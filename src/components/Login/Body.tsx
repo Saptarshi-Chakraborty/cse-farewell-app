@@ -1,16 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/retroui/Input";
+import { Button } from "@/components/retroui/Button";
 import { Mail, Key } from "lucide-react";
 import { account, ID } from "@/lib/appwrite";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/router";
-
-const retroStyle =
-  "border-2 border-black shadow-[4px_4px_0px_#2A2A2A] transition-all hover:shadow-[2px_2px_0px_#2A2A2A]";
+import { Text } from "../retroui/Text";
 
 const LoginPageBody = () => {
   const router = useRouter();
@@ -61,7 +59,9 @@ const LoginPageBody = () => {
     try {
       const userId = userIdRef.current;
       if (!userId) {
-        throw new Error("User ID is missing. Please restart the login process.");
+        throw new Error(
+          "User ID is missing. Please restart the login process."
+        );
       }
 
       const session = await account.createSession(userId, otp);
@@ -89,9 +89,9 @@ const LoginPageBody = () => {
 
   return (
     <section className="text-center space-y-8">
-      <h2 className="text-3xl">Login to CSE Farewell Portal</h2>
+      <Text as="h2" >Login to CSE Farewell Portal</Text>
       <div className="flex justify-center">
-        <Card className={`w-full max-w-md ${retroStyle}`}>
+        <Card className={`w-full max-w-md`}>
           <CardHeader>
             <CardTitle className="text-2xl">
               {step === "email" ? "Enter Email" : "Enter OTP"}
@@ -111,12 +111,11 @@ const LoginPageBody = () => {
                         placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className={retroStyle}
                       />
                     </div>
                     <Button
                       onClick={handleEmailSubmit}
-                      className={`w-full ${retroStyle} uppercase bg-yellow-400 hover:bg-yellow-500`}
+                      className="block w-full uppercase text-center"
                     >
                       Send OTP
                     </Button>
@@ -134,12 +133,11 @@ const LoginPageBody = () => {
                         placeholder="Enter OTP"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className={retroStyle}
                       />
                     </div>
                     <Button
                       onClick={handleOtpSubmit}
-                      className={`w-full ${retroStyle} uppercase bg-yellow-400 hover:bg-yellow-500`}
+                      className={`w-full  uppercase bg-yellow-400 hover:bg-yellow-500`}
                     >
                       Verify OTP
                     </Button>

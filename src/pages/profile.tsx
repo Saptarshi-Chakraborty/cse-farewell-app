@@ -1,3 +1,4 @@
+// /pages/profile.tsx
 
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -20,16 +21,27 @@ const retroStyle =
 
 const ProfilePage = () => {
   const router = useRouter();
-  const { user } = useGlobalContext();
+  // We get isCheckingAuth from the context, which is managed by the Header
+  const { user, isCheckingAuth } = useGlobalContext();
 
+  // This effect no longer initiates a check. It only handles redirecting
+  // the user away if the check has finished and no user was found.
   useEffect(() => {
-    if (!user) {
+    // Wait until the auth check is complete
+    if (!isCheckingAuth && !user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, isCheckingAuth, router]);
 
+  // Rely on the global isCheckingAuth for the loading state.
+  if (isCheckingAuth) {
+    return <div>Loading...</div>;
+  }
+
+  // If the check is done and there's no user, return null to prevent
+  // a "flash of content" while the redirect above is happening.
   if (!user) {
-    return null; // Prevent flash of content while redirecting
+    return null;
   }
 
   return (

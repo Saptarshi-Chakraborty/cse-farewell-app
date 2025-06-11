@@ -1,4 +1,6 @@
-export type Page = "stats" | "students" | "scan" | "login" | "profile";
+export type Page = "stats" | "students" | "scan" | "login" | "profile" | "dashboard" | "students/[year]" | "students/bulk_upload";
+
+
 
 export type Student = {
   $id: string;
