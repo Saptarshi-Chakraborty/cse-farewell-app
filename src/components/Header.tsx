@@ -2,31 +2,38 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { LogOut } from "lucide-react";
 import { deleteSession } from "@/lib/appwrite";
 import { Page } from "@/lib/types";
-
-interface HeaderProps {
-  activePage: Page;
-  onPageChange: (page: Page) => void;
-}
+import { useRouter, usePathname } from "next/navigation";
 
 const retroStyle =
   "border-2 border-black shadow-[4px_4px_0px_#2A2A2A] transition-all hover:shadow-[2px_2px_0px_#2A2A2A]";
 
-export default function Header({ activePage, onPageChange }: HeaderProps) {
+export default function Header() {
   const { checkAuth, user } = useGlobalContext();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [activePage, setActivePage] = useState<Page>("stats");
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+    // Set active page based on pathname
+    const path = pathname.replace("/", "") as Page;
+    if (path) setActivePage(path);
+  }, [pathname]);
+
+  const handlePageChange = (page: Page) => {
+    setActivePage(page);
+    router.push(`/${page}`);
+  };
 
   const handleLogout = async () => {
     await deleteSession();
     checkAuth();
-    onPageChange("login");
+    router.push("/login");
   };
 
   return (
@@ -36,21 +43,21 @@ export default function Header({ activePage, onPageChange }: HeaderProps) {
         <Button
           variant={activePage === "stats" ? "default" : "outline"}
           className={`${retroStyle} uppercase`}
-          onClick={() => onPageChange("stats")}
+          onClick={() => handlePageChange("stats")}
         >
           Stats
         </Button>
         <Button
           variant={activePage === "students" ? "default" : "outline"}
           className={`${retroStyle} uppercase`}
-          onClick={() => onPageChange("students")}
+          onClick={() => handlePageChange("students")}
         >
           Students
         </Button>
         <Button
           variant={activePage === "scan" ? "default" : "outline"}
           className={`${retroStyle} uppercase`}
-          onClick={() => onPageChange("scan")}
+          onClick={() => handlePageChange("scan")}
         >
           Scan QR
         </Button>

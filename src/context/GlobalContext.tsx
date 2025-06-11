@@ -33,19 +33,24 @@ export function GlobalContextProvider({
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
   const checkAuth = useCallback(async () => {
-    // Skip if we're already checking or if user is already set
-    if (isCheckingAuth || user) return;
+    // Skip if we're already checking
+    if (isCheckingAuth) return;
 
     setIsCheckingAuth(true);
     try {
       const currentUser = await account.get();
       setUser(currentUser);
-    } catch (error) {
+    } catch (error: any) {
+      // Clear user if unauthorized or any other error
       setUser(null);
+      // Don't log error for unauthorized requests
+      if (error.code !== 401) {
+        console.error("Auth check error:", error);
+      }
     } finally {
       setIsCheckingAuth(false);
     }
-  }, [isCheckingAuth, user]);
+  }, [isCheckingAuth]); // Remove user dependency
 
   return (
     <GlobalContext.Provider

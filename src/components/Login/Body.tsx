@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Key } from "lucide-react";
 import { account, ID } from "@/lib/appwrite";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 
 const retroStyle =
   "border-2 border-black shadow-[4px_4px_0px_#2A2A2A] transition-all hover:shadow-[2px_2px_0px_#2A2A2A]";
@@ -74,52 +75,69 @@ const LoginPageBody = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 md:p-8">
-      <div className={`p-6 w-full max-w-md bg-white ${retroStyle}`}>
-        <h2 className="text-2xl mb-4 text-center">Login</h2>
-        {loading ? (
-          <div className="text-center">Loading...</div> // Loading indicator
-        ) : step === "email" ? (
-          <>
-            <div className="flex items-center mb-4">
-              <Mail className="mr-2 text-gray-500" />
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={retroStyle}
-              />
-            </div>
-            <Button
-              onClick={handleEmailSubmit}
-              className={`w-full ${retroStyle}`}
-            >
-              Send OTP
-            </Button>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center mb-4">
-              <Key className="mr-2 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Enter OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className={retroStyle}
-              />
-            </div>
-            <Button
-              onClick={handleOtpSubmit}
-              className={`w-full ${retroStyle}`}
-            >
-              Verify OTP
-            </Button>
-          </>
-        )}
+    <section className="text-center space-y-8">
+      <h2 className="text-3xl">Login to CSE Farewell Portal</h2>
+      <div className="flex justify-center">
+        <Card className={`w-full max-w-md ${retroStyle}`}>
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              {step === "email" ? "Enter Email" : "Enter OTP"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center text-xl">Loading...</div>
+            ) : step === "email" ? (
+              <>
+                <div className="flex items-center space-y-4">
+                  <div className="w-full space-y-2">
+                    <div className="flex items-center">
+                      <Mail className="mr-2 text-gray-500" />
+                      <Input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={retroStyle}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleEmailSubmit}
+                      className={`w-full ${retroStyle} uppercase bg-yellow-400 hover:bg-yellow-500`}
+                    >
+                      Send OTP
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center space-y-4">
+                  <div className="w-full space-y-2">
+                    <div className="flex items-center">
+                      <Key className="mr-2 text-gray-500" />
+                      <Input
+                        type="text"
+                        placeholder="Enter OTP"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className={retroStyle}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleOtpSubmit}
+                      className={`w-full ${retroStyle} uppercase bg-yellow-400 hover:bg-yellow-500`}
+                    >
+                      Verify OTP
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </section>
   );
 };
 

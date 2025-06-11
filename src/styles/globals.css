@@ -2,6 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -74,11 +77,25 @@
   --border: #eee;
 }
 
-body {
+/* body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Space Grotesk', sans-serif;
-}
-h1, h2, h3, h4, h5, h6 {
+} */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Archivo Black', sans-serif;
+}
+
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  /* font-family: "VT323", monospace; */
+  background-color: #fdf6e3;
+  color: #2a2a2a;
 }
