@@ -107,22 +107,39 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   return (
     <main id="main-content">
       <section className="space-y-6">
-        <div className="flex justify-between items-center">
-          <Text as="h2" className="text-3xl">{yearShortName} Year Students</Text>
-          <div className="flex items-center gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          <Text as="h2" className="text-3xl text-center sm:text-left">
+            {yearShortName} Year Students
+          </Text>
+          <div className="flex items-center gap-2 justify-center sm:justify-end">
             <Button
               className={`uppercase bg-blue-400 hover:bg-blue-500`}
               onClick={fetchStudents}
               disabled={loading}
             >
-              {loading ? "Refreshing..." : "Refresh List"}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38" />
+              </svg>
+              <span className="hidden sm:inline ml-2">
+                {loading ? "Refreshing..." : "Refresh List"}
+              </span>
             </Button>
             <Button
               className={`uppercase bg-green-400 hover:bg-green-500`}
               onClick={handleAddStudent}
               disabled={loading}
             >
-              <PlusCircle className="mr-2 h-5 w-5" /> Add Student
+              <PlusCircle className="h-5 w-5" />
+              <span className="hidden sm:inline ml-2">Add Student</span>
             </Button>
           </div>
         </div>
