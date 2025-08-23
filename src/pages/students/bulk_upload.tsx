@@ -3,11 +3,7 @@
 import BulkUploadPageBody from "@/components/BulkUploadData/Body";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import StudentsPageBody from "@/components/Students/Body";
-import StudentDialog from "@/components/Students/StudentDialog";
-import { Student } from "@/lib/types";
 import Head from "next/head";
-import { useState } from "react";
 
 const BulkUploadStudents = () => {
   return (

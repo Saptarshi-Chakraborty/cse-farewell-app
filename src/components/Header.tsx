@@ -19,40 +19,6 @@ export default function Header() {
   const [activePage, setActivePage] = useState<Page>("stats");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    checkAuth();
-    const path = pathname.replace("/", "") as Page;
-    if (path) setActivePage(path);
-  }, [checkAuth, pathname]);
-
-  useEffect(() => {
-    if (user && pathname === '/login') {
-      if (user.labels && user.labels.includes('admin')) {
-        router.push('/dashboard');
-      } else {
-        router.push('/profile');
-      }
-    }
-  }, [user, pathname, router]);
-
-  useEffect(() => {
-    // For non-admin users, restrict access to only profile and home pages
-    if (user && (!user.labels || !user.labels.includes('admin'))) {
-      if (pathname !== '/profile' && pathname !== '/login' && pathname !== '/') {
-        router.push('/profile');
-      }
-    }
-  }, [user, pathname, router]);
-
-  useEffect(() => {
-    // For logged-out users, restrict access to only login and home pages
-    if (!user) {
-      if (pathname !== '/login' && pathname !== '/') {
-        router.push('/login');
-      }
-    }
-  }, [user, pathname, router]);
-
   const handlePageChange = (page: Page) => {
     setActivePage(page);
     router.push(`/${page}`);

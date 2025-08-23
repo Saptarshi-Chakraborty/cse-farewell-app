@@ -1,17 +1,11 @@
 import React, { useState } from "react";
 import { usePapaParse } from "react-papaparse";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/retroui/Card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { retroStyle } from "@/lib/styles";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/retroui/Select";
 import {
   databases,
   DATABASE_ID,
@@ -159,22 +153,28 @@ const BulkUploadPageBody = () => {
 
   return (
     <div className="space-y-6">
-      <Card className={`${retroStyle} p-6`}>
-        <h2 className="text-2xl mb-4">Bulk Upload Students</h2>
-
-        <div className="space-y-4">
+      <Card className="w-full">
+        <Card.Header>
+          <Card.Title>Bulk Upload Students</Card.Title>
+          <Card.Description>
+            Upload multiple student records using a CSV file
+          </Card.Description>
+        </Card.Header>
+        <div className="space-y-4 p-6">
           <div>
             <Label>Select Year</Label>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className={retroStyle}>
-                <SelectValue placeholder="Select year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1st Year</SelectItem>
-                <SelectItem value="2">2nd Year</SelectItem>
-                <SelectItem value="3">3rd Year</SelectItem>
-                <SelectItem value="4">4th Year</SelectItem>
-              </SelectContent>
+              <Select.Trigger className={retroStyle}>
+                <Select.Value placeholder="Select year" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Group>
+                  <Select.Item value="1">1st Year</Select.Item>
+                  <Select.Item value="2">2nd Year</Select.Item>
+                  <Select.Item value="3">3rd Year</Select.Item>
+                  <Select.Item value="4">4th Year</Select.Item>
+                </Select.Group>
+              </Select.Content>
             </Select>
           </div>
 
@@ -199,16 +199,18 @@ const BulkUploadPageBody = () => {
                     value={columnMapping.name}
                     onValueChange={(v) => handleMappingChange("name", v)}
                   >
-                    <SelectTrigger className={retroStyle}>
-                      <SelectValue placeholder="Select column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {headers.map((header) => (
-                        <SelectItem key={header} value={header}>
-                          {header}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <Select.Trigger className={retroStyle}>
+                      <Select.Value placeholder="Select column" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Group>
+                        {headers.map((header) => (
+                          <Select.Item key={header} value={header}>
+                            {header}
+                          </Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Content>
                   </Select>
                 </div>
 
@@ -218,16 +220,18 @@ const BulkUploadPageBody = () => {
                     value={columnMapping.email}
                     onValueChange={(v) => handleMappingChange("email", v)}
                   >
-                    <SelectTrigger className={retroStyle}>
-                      <SelectValue placeholder="Select column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {headers.map((header) => (
-                        <SelectItem key={header} value={header}>
-                          {header}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <Select.Trigger className={retroStyle}>
+                      <Select.Value placeholder="Select column" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Group>
+                        {headers.map((header) => (
+                          <Select.Item key={header} value={header}>
+                            {header}
+                          </Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Content>
                   </Select>
                 </div>
 
@@ -237,16 +241,18 @@ const BulkUploadPageBody = () => {
                     value={columnMapping.roll}
                     onValueChange={(v) => handleMappingChange("roll", v)}
                   >
-                    <SelectTrigger className={retroStyle}>
-                      <SelectValue placeholder="Select column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {headers.map((header) => (
-                        <SelectItem key={header} value={header}>
-                          {header}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <Select.Trigger className={retroStyle}>
+                      <Select.Value placeholder="Select column" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Group>
+                        {headers.map((header) => (
+                          <Select.Item key={header} value={header}>
+                            {header}
+                          </Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Content>
                   </Select>
                 </div>
 
@@ -258,16 +264,18 @@ const BulkUploadPageBody = () => {
                       handleMappingChange("food_preference", v)
                     }
                   >
-                    <SelectTrigger className={retroStyle}>
-                      <SelectValue placeholder="Select column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {headers.map((header) => (
-                        <SelectItem key={header} value={header}>
-                          {header}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <Select.Trigger className={retroStyle}>
+                      <Select.Value placeholder="Select column" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Group>
+                        {headers.map((header) => (
+                          <Select.Item key={header} value={header}>
+                            {header}
+                          </Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Content>
                   </Select>
                 </div>
 
@@ -279,16 +287,18 @@ const BulkUploadPageBody = () => {
                       handleMappingChange("payment_method", v)
                     }
                   >
-                    <SelectTrigger className={retroStyle}>
-                      <SelectValue placeholder="Select column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {headers.map((header) => (
-                        <SelectItem key={header} value={header}>
-                          {header}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <Select.Trigger className={retroStyle}>
+                      <Select.Value placeholder="Select column" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Group>
+                        {headers.map((header) => (
+                          <Select.Item key={header} value={header}>
+                            {header}
+                          </Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Content>
                   </Select>
                 </div>
 
@@ -298,16 +308,18 @@ const BulkUploadPageBody = () => {
                     value={columnMapping.section}
                     onValueChange={(v) => handleMappingChange("section", v)}
                   >
-                    <SelectTrigger className={retroStyle}>
-                      <SelectValue placeholder="Select column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {headers.map((header) => (
-                        <SelectItem key={header} value={header}>
-                          {header}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <Select.Trigger className={retroStyle}>
+                      <Select.Value placeholder="Select column" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Group>
+                        {headers.map((header) => (
+                          <Select.Item key={header} value={header}>
+                            {header}
+                          </Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Content>
                   </Select>
                 </div>
               </div>

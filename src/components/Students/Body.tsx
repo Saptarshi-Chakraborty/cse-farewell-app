@@ -103,14 +103,7 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
 
   // Check authentication and fetch students
   useEffect(() => {
-    // Check if user is authenticated (you need to implement your own auth check)
-    const isAuthenticated = false; // Replace this with your actual auth check
-    const isAdmin = false; // Replace this with your actual admin check
-
-    if (!isAuthenticated || !isAdmin) {
-      router.push("/login");
-      return;
-    }
+    
 
     fetchStudents();
   }, [year, router]);

@@ -42,7 +42,7 @@ export default function Dashboard() {
     {
       title: "Bulk Upload",
       icon: <FileUp className="h-8 w-8" />,
-      path: "/bulk-upload",
+      path: "/students/bulk_upload",
       bgColor: "bg-purple-200",
     },
     {
