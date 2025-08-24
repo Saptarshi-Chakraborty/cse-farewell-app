@@ -14,20 +14,20 @@ export default function Home() {
         <meta name="description" content={FeatureRule.metaTags.description} />
         <meta
           name="keywords"
-          content="semicolon, farewell, cse, fiem, future institute"
+          content={FeatureRule?.metaTags?.keywords.join(", ") || ""}
         />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta
           property="og:title"
-          content={`${FeatureRule.appName} - ${FeatureRule.appShortDescription}`}
+          content={`${FeatureRule?.appName} - ${FeatureRule?.appShortDescription}`}
         />
         <meta
           property="og:description"
-          content={FeatureRule.metaTags.description}
+          content={FeatureRule?.metaTags?.description || ""}
         />
-        <meta property="og:image" content={FeatureRule.metaTags.urlImage} />
+        <meta property="og:image" content={FeatureRule?.metaTags?.urlImage || ""} />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -50,8 +50,8 @@ export default function Home() {
         <Header />
         <div className="flex justify-center my-4 mb-1">
           <img
-            src="/poster.jpg"
-            alt="Semicolon '25 Poster"
+            src={FeatureRule?.metaTags?.urlImage}
+            alt="App Banner"
             className="max-h-[90vh]"
           />
         </div>

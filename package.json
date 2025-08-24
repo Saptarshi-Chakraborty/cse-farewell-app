@@ -22,10 +22,12 @@
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.513.0",
     "next": "15.3.3",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-papaparse": "^4.4.0",
     "react-toastify": "^11.0.5",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {

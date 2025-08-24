@@ -11,6 +11,7 @@ import { Page } from "@/lib/types";
 import { useRouter } from "next/router"; // Correct: Use router from 'next/router'
 import Link from "next/link";
 import { Text } from "./retroui/Text";
+import FeatureRule from "@/data/Feature.Rules.json";
 
 export default function Header() {
   const { checkAuth, user } = useGlobalContext();
@@ -44,7 +45,7 @@ export default function Header() {
     <header className="relative">
       <div className="flex justify-between items-center mb-0 md:mb-4 pb-4 border-b-4 border-black">
         <Link href="/">
-          <Text as="h1" className="text-3xl md:text-4xl ">SEMICOLON '25</Text>
+          <Text as="h1" className="text-3xl md:text-4xl ">{FeatureRule?.appName?.toUpperCase()}</Text>
         </Link>
 
         {user ? (

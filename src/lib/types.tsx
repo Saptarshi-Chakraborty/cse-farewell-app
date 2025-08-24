@@ -16,6 +16,7 @@ export type Student = {
   roll: string;
   food_preference: "veg" | "non-veg";
   payment_method: "online" | "offline" | "null" | null;
+  coupon_generated?: boolean;
 };
 
 export type StudentsPageBodyProps = {
@@ -27,4 +28,11 @@ export type ScannedStudent = {
   food: string;
   roll: string;
   status?: string;
+};
+
+export type VideoState = {
+    gotPermissions: boolean;
+    cameraStarted: boolean;
+    numberOfDevices: number;
+    errorMessage: string | null;
 };

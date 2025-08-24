@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Select } from "@/components/retroui/Select";
 import { Text } from '../retroui/Text';
-
-type VideoState = {
-    gotPermissions: boolean;
-    cameraStarted: boolean;
-    numberOfDevices: number;
-    errorMessage: string | null;
-};
+import { VideoState } from '@/lib/types';
 
 type Props = {
     videoState: VideoState;

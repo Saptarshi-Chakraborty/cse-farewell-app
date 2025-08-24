@@ -1,21 +1,20 @@
 'use client';
 
-import { useRouter } from "next/router";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import LoginPageBody from "@/components/Login/Body";
-import { Page } from "@/lib/types";
+import { Toaster } from "@/components/retroui/Sonner";
+import FeatureRule from "@/data/Feature.Rules.json";
 import Head from "next/head";
+import { useRouter } from "next/router";
 
 export default function Login() {
   const router = useRouter();
 
-  
-
   return (
     <>
       <Head>
-        <title>Login</title>
+        <title>Login | {FeatureRule?.appName}</title>
       </Head>
      
       <div className="p-4 md:p-8">
@@ -25,6 +24,8 @@ export default function Login() {
         </main>
         <Footer />
       </div>
+
+      <Toaster />
     </>
   );
 }

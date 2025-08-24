@@ -20,6 +20,8 @@ const deleteSession = async () => {
 const DATABASE_ID = process.env.NEXT_PUBLIC_DATABASE_ID as string;
 const STUDENTS_COLLECTION_ID = process.env
   .NEXT_PUBLIC_STUDENTS_COLLECTION_ID as string;
+const FOOD_COUPON_COLLECTION_ID = process.env
+  .NEXT_PUBLIC_FOOD_COUPON_COLLECTION_ID as string;
 
 export {
   client,
@@ -30,4 +32,5 @@ export {
   Query,
   DATABASE_ID,
   STUDENTS_COLLECTION_ID,
+  FOOD_COUPON_COLLECTION_ID,
 };
