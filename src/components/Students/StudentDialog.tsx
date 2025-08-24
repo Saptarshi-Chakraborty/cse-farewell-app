@@ -26,10 +26,10 @@ import {
 } from "@/lib/appwrite";
 
 import { retroStyle } from "@/lib/styles";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-type Student = {
-  id: string;
+type StudentDoc = {
+  $id?: string;
   name: string;
   email: string;
   year: string;
@@ -43,12 +43,18 @@ const StudentDialog = ({
   isOpen,
   onOpenChange,
   year,
+  mode = "add",
+  initialStudent,
+  onSubmitted,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  year: String | undefined | null;
+  year?: string | null;
+  mode?: "add" | "edit";
+  initialStudent?: StudentDoc | null;
+  onSubmitted?: (saved: any, mode: "add" | "edit") => void;
 }) => {
-  const [student, setStudent] = useState({
+  const [student, setStudent] = useState<StudentDoc>({
     name: "",
     email: "",
     year: year || "",
@@ -56,6 +62,30 @@ const StudentDialog = ({
     food_preference: "veg",
     payment_method: "null",
   });
+
+  // Prefill when editing or when year changes for add
+  useEffect(() => {
+    if (mode === "edit" && initialStudent) {
+      setStudent({
+        $id: initialStudent.$id,
+        name: initialStudent.name || "",
+        email: initialStudent.email || "",
+        year: initialStudent.year || "",
+        roll: initialStudent.roll || "",
+        food_preference:
+          (initialStudent.food_preference || "veg").toLowerCase(),
+        payment_method:
+          initialStudent.payment_method === null
+            ? "null"
+            : String(initialStudent.payment_method),
+      });
+    } else {
+      setStudent((prev) => ({
+        ...prev,
+        year: year || "",
+      }));
+    }
+  }, [mode, initialStudent, year, isOpen]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement> | { name: string; value: string }
@@ -80,47 +110,62 @@ const StudentDialog = ({
     const name = String(student.name).trim();
     const roll = String(student.roll).trim();
     const email = String(student.email).trim();
-    let food_preference = String(student.food_preference).trim();
+    let food_preference = String(student.food_preference).trim().toLowerCase();
     let payment_method: string | null = String(student.payment_method).trim();
-    let year = String(student.year).trim();
+    const yearVal = String(student.year).trim();
 
-    if (!name) {
-      console.error("Name is required.");
+    if (!name || !roll || !email) {
+      console.error("Name, Roll and Email are required.");
       return;
     }
 
     if (payment_method === "null") payment_method = null;
+    if (food_preference !== "veg" && food_preference !== "non-veg") {
+      food_preference = "veg";
+    }
 
-    const newStudent = {
+    const payload = {
       name,
       email,
-      year,
+      year: yearVal,
       roll,
       food_preference,
       payment_method,
     };
 
     try {
-      const result = await databases.createDocument(
-        DATABASE_ID,
-        STUDENTS_COLLECTION_ID,
-        ID.unique(),
-        newStudent
-      );
+      let result;
+      if (mode === "edit" && initialStudent?.$id) {
+        result = await databases.updateDocument(
+          DATABASE_ID,
+          STUDENTS_COLLECTION_ID,
+          initialStudent.$id,
+          payload
+        );
+      } else {
+        result = await databases.createDocument(
+          DATABASE_ID,
+          STUDENTS_COLLECTION_ID,
+          ID.unique(),
+          payload
+        );
+      }
 
-      console.log("Student saved successfully:", result);
+      onSubmitted?.(result, mode);
+      onOpenChange(false);
     } catch (error) {
       console.error("Error saving student:", error);
+      alert("Failed to save student. Please try again.");
     }
-
-    console.log("New Student Data:", newStudent);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className={`bg-[#FDF6E3] ${retroStyle} max-w-lg`}>
         <DialogHeader>
-          <DialogTitle className="text-2xl">Add New Student</DialogTitle>
+          <DialogTitle className="text-2xl">
+            {mode === "edit" ? "Edit Student" : "Add New Student"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -178,8 +223,9 @@ const StudentDialog = ({
                 <SelectValue placeholder="Select food preference" />
               </SelectTrigger>
               <SelectContent className={`bg-[#FDF6E3] ${retroStyle}`}>
+                {/* normalized to lower case for consistency */}
                 <SelectItem value="veg">Veg</SelectItem>
-                <SelectItem value="non-Veg">Non-Veg</SelectItem>
+                <SelectItem value="non-veg">Non-Veg</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -189,7 +235,7 @@ const StudentDialog = ({
             </Label>
             <Select
               name="payment_method"
-              value={student.payment_method}
+              value={student.payment_method ?? "null"}
               onValueChange={(value) =>
                 handleChange({ name: "payment_method", value })
               }
@@ -218,7 +264,7 @@ const StudentDialog = ({
               type="submit"
               className={`${retroStyle} uppercase bg-yellow-400 hover:bg-yellow-500`}
             >
-              Save Student
+              {mode === "edit" ? "Save Changes" : "Save Student"}
             </Button>
           </DialogFooter>
         </form>

@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/retroui/Table"; // switched to RetroUI
 import { useEffect, useState } from "react";
 import StudentDialog from "./StudentDialog";
 import {
@@ -32,6 +32,8 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
     vegCount: 0,
@@ -78,22 +80,25 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   }
 
   const handleAddStudent = () => {
+    setSelectedStudent(null);
+    setModalMode("add");
+    setIsModalOpen(true);
+  };
+
+  const handleEditStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setModalMode("edit");
     setIsModalOpen(true);
   };
 
   const handleDeleteStudent = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
       try {
-        // Delete from Appwrite database
         await databases.deleteDocument(DATABASE_ID, STUDENTS_COLLECTION_ID, id);
-
-        // Update local state after successful deletion
-        setStudents((prev) => prev.filter((student) => student.$id !== id));
-
-        // Update stats
-        setStats((prev) =>
-          calculateStats(students.filter((s) => s.$id !== id))
-        );
+        // Recompute with updated list
+        const updated = students.filter((s) => s.$id !== id);
+        setStudents(updated);
+        setStats(calculateStats(updated));
       } catch (error) {
         console.error("Error deleting student:", error);
         alert("Failed to delete student. Please try again.");
@@ -174,74 +179,99 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
         )}
 
         <Card className={`p-4 block`}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-lg text-black">#</TableHead>
-                <TableHead className="text-lg text-black">Name</TableHead>
-                <TableHead className="text-lg text-black">Roll No.</TableHead>
-                <TableHead className="text-lg text-black">Email</TableHead>
-                <TableHead className="text-lg text-black">Food Pref.</TableHead>
-                <TableHead className="text-lg text-black">Payment</TableHead>
-                <TableHead className="text-lg text-black">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.length === 0 ? (
+          {/* Add a horizontal scroll container for mobile */}
+          <div className="w-full overflow-x-auto">
+            <Table className="min-w-[720px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={10}
-                    className="text-center py-8 text-gray-500"
-                  >
-                    No students found. Add some students to see them here.
-                  </TableCell>
+                  <TableHead className="text-lg text-black">#</TableHead>
+                  <TableHead className="text-lg text-black">Name</TableHead>
+                  <TableHead className="text-lg text-black">Roll No.</TableHead>
+                  <TableHead className="text-lg text-black">Email</TableHead>
+                  <TableHead className="text-lg text-black">Food Pref.</TableHead>
+                  <TableHead className="text-lg text-black">Payment</TableHead>
+                  <TableHead className="text-lg text-black">Actions</TableHead>
                 </TableRow>
-              ) : (
-                students.map((student, i) => (
-                  <TableRow key={student.$id}>
-                    <TableCell className="text-base font-semibold">
-                      {i + 1}
-                    </TableCell>
-                    <TableCell className="text-base">{student.name}</TableCell>
-                    <TableCell className="text-base">{student.roll}</TableCell>
-                    <TableCell className="text-base">{student.email}</TableCell>
-                    <TableCell className="text-base">
-                      {student.food_preference}
-                    </TableCell>
-                    <TableCell className="text-base">
-                      {student.payment_method || "N/A"}
-                    </TableCell>
-                    <TableCell className="space-x-1">
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className={retroStyle}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          className="bg-destructive text-white hover:bg-destructive/90 border-black"
-                          onClick={() =>
-                            handleDeleteStudent(String(student.$id))
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {students.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      className="text-center py-8 text-gray-500"
+                    >
+                      No students found. Add some students to see them here.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  students.map((student, i) => (
+                    <TableRow key={student.$id}>
+                      <TableCell className="text-base font-semibold">
+                        {i + 1}
+                      </TableCell>
+                      <TableCell className="text-base">{student.name}</TableCell>
+                      <TableCell className="text-base">{student.roll}</TableCell>
+                      <TableCell className="text-base">{student.email}</TableCell>
+                      <TableCell className="text-base">
+                        {student.food_preference}
+                      </TableCell>
+                      <TableCell className="text-base">
+                        {student.payment_method || "N/A"}
+                      </TableCell>
+                      <TableCell className="space-x-1">
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className={retroStyle}
+                            onClick={() => handleEditStudent(student)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            className="bg-destructive text-white hover:bg-destructive/90 border-black"
+                            onClick={() =>
+                              handleDeleteStudent(String(student.$id))
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
       </section>
       <StudentDialog
         isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) setSelectedStudent(null);
+        }}
+        mode={modalMode}
         year={year}
+        initialStudent={
+          modalMode === "edit"
+            ? {
+                $id: selectedStudent?.$id,
+                name: selectedStudent?.name || "",
+                email: selectedStudent?.email || "",
+                year: selectedStudent?.year || "",
+                roll: selectedStudent?.roll || "",
+                food_preference: selectedStudent?.food_preference || "veg",
+                payment_method:
+                  (selectedStudent?.payment_method as any) ?? null,
+              }
+            : undefined
+        }
+        onSubmitted={() => {
+          fetchStudents();
+        }}
       />
     </main>
   );

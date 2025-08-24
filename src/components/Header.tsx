@@ -42,7 +42,7 @@ export default function Header() {
 
   return (
     <header className="relative">
-      <div className="flex justify-between items-center mb-8 pb-4 border-b-4 border-black">
+      <div className="flex justify-between items-center mb-0 md:mb-4 pb-4 border-b-4 border-black">
         <Link href="/">
           <Text as="h1" className="text-3xl md:text-4xl ">SEMICOLON '25</Text>
         </Link>
