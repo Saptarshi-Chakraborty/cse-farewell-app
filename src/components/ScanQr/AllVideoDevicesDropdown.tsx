@@ -24,11 +24,12 @@ const AllVideoDevicesDropdown: React.FC<Props> = ({ videoState, allVideoDeviceOb
     }
 
     useEffect(() => {
-        if (allVideoDeviceObjects.length > 0 && initializedCameraId === false) {
+        // Initialize selected camera once when devices are available and none is selected yet.
+        if (!initializedCameraId && !currentCameraId && allVideoDeviceObjects.length > 0) {
             setCurrentCamera(allVideoDeviceObjects[0].deviceId)
             setInitializedCameraId(true);
         }
-    }, [videoState])
+    }, [initializedCameraId, currentCameraId, allVideoDeviceObjects, setCurrentCamera])
     
     // Function to format device name for better display
     const formatDeviceName = (label: string, deviceId: string): string => {
@@ -55,31 +56,38 @@ const AllVideoDevicesDropdown: React.FC<Props> = ({ videoState, allVideoDeviceOb
                     :
                     <div className="w-full">
                         <Text as="h4" className="text-center mb-2">All available cameras</Text>
-                        {/* <h4 className="text-center mb-2">All available cameras</h4> */}
-                        <Select value={currentCameraId ?? undefined} onValueChange={changeCameraId}>
-                            <Select.Trigger className="w-full">
-                                <Select.Value placeholder="Select a camera" className="truncate max-w-[200px]" />
-                            </Select.Trigger>
-                            <Select.Content>
-                                <Select.Group>
-                                    {
-                                        allVideoDeviceObjects.map((item: MediaDeviceInfo) => {
-                                            const displayName = formatDeviceName(item.label, item.deviceId);
-                                            return (
-                                                <Select.Item 
-                                                    value={item.deviceId} 
-                                                    key={item.deviceId}
-                                                    className="truncate"
-                                                    title={item.label || item.deviceId} // Full text as tooltip
-                                                >
-                                                    {displayName}
-                                                </Select.Item>
-                                            )
-                                        })
-                                    }
-                                </Select.Group>
-                            </Select.Content>
-                        </Select>
+                        {
+                            // Render Select only when we have a selected camera ID,
+                            // keeping it controlled for its entire lifecycle.
+                            currentCameraId ? (
+                                <Select value={currentCameraId} onValueChange={changeCameraId}>
+                                    <Select.Trigger className="w-full">
+                                        <Select.Value placeholder="Select a camera" className="truncate max-w-[200px]" />
+                                    </Select.Trigger>
+                                    <Select.Content>
+                                        <Select.Group>
+                                            {
+                                                allVideoDeviceObjects.map((item: MediaDeviceInfo) => {
+                                                    const displayName = formatDeviceName(item.label, item.deviceId);
+                                                    return (
+                                                        <Select.Item 
+                                                            value={item.deviceId} 
+                                                            key={item.deviceId}
+                                                            className="truncate"
+                                                            title={item.label || item.deviceId}
+                                                        >
+                                                            {displayName}
+                                                        </Select.Item>
+                                                    )
+                                                })
+                                            }
+                                        </Select.Group>
+                                    </Select.Content>
+                                </Select>
+                            ) : (
+                                <Text as="p" className="text-center text-sm text-muted-foreground">Detecting cameras...</Text>
+                            )
+                        }
                     </div>
             }
         </div>
