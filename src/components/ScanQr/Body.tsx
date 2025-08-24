@@ -1,95 +1,84 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Text } from "../retroui/Text";
 import { Button } from "../retroui/Button";
 import { Card } from "../retroui/Card";
 import { retroStyle } from "@/lib/styles";
-import { ScanQrCode as QrCodeScanner } from "lucide-react";
-
-type ScanResult = {
-  name: string;
-  food: string;
-  status: string;
-} | null;
+import Scanner from "./Scanner";
+import { ScannedStudent } from "@/lib/types";
 
 const ScanQrBody = () => {
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<ScanResult>(null);
+  const [qrData, setQrData] = useState<string | null>(null);
+  const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(null);
 
-  const startScan = () => {
-    setIsScanning(true);
-    setScanResult(null);
-    // Simulate scan after 2s
-    setTimeout(() => {
-      setScanResult({
-        name: "Student: Rohan Das",
-        food: "Food: Veg",
-        status: "Status: Valid Coupon",
-      });
-      setIsScanning(false);
-    }, 2000);
+  // Process QR data when received
+  const handleQrData = (data: string) => {
+    setQrData(data);
+    try {
+      // Attempt to parse as JSON if it's a valid student data
+      const parsedData = JSON.parse(data);
+      if (parsedData.name && parsedData.roll) {
+        setScannedStudent(parsedData);
+      }
+    } catch (e) {
+      // If not JSON, just display as raw text
+      setScannedStudent(null);
+    }
   };
 
-  useEffect(() => {
-    // Auto-start on mount
-    startScan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <main id="main-content">
-      <section className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-          <Text as="h2" className="text-3xl text-center sm:text-left">
+    <main id="main-content" className="flex justify-center">
+      <section className="space-y-6 max-w-3xl w-full">
+        <div className="grid grid-cols-1 gap-4 items-center">
+          <Text as="h2" className="text-3xl text-center">
             Scan Food Coupon QR Code
           </Text>
-          <div className="flex items-center gap-2 justify-center sm:justify-end">
-            <Button
-              className={`uppercase bg-blue-400 hover:bg-blue-500`}
-              onClick={startScan}
-              disabled={isScanning}
-            >
-              <QrCodeScanner className="h-5 w-5" />
-              <span className="hidden sm:inline ml-2">
-                {scanResult ? "Rescan" : "Start Scan"}
-              </span>
-            </Button>
-          </div>
         </div>
 
         <Card className={`${retroStyle} p-6 block`}>
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-64 h-64 md:w-80 md:h-80 bg-gray-800 flex items-center justify-center mb-6 ${retroStyle}`}
-            >
-              <QrCodeScanner className="h-36 w-36 text-gray-500" />
+          <div className="flex flex-col items-center w-full">
+            {/* Custom QR Scanner with fixed dimensions */}
+            <div className="mb-4 w-full">
+              <Scanner qrData={qrData} setQrData={handleQrData} />
             </div>
 
-            {isScanning ? (
-              <div className={`mt-2 p-4 min-w-[300px] bg-white ${retroStyle}`}>
-                <Text as="h3" className="text-xl mb-2">
-                  Scanning...
-                </Text>
-                <p className="text-gray-600">Point the camera at the QR code.</p>
-              </div>
-            ) : scanResult ? (
+            {/* Result / Helper */}
+            {qrData ? (
               <div className={`mt-2 p-4 min-w-[300px] bg-white ${retroStyle}`}>
                 <Text as="h3" className="text-xl mb-2">
                   Scan Result
                 </Text>
-                <p className="text-lg">{scanResult.name}</p>
-                <p className="text-md">{scanResult.food}</p>
-                <p className="text-md font-bold text-green-600">
-                  {scanResult.status}
-                </p>
+                {scannedStudent ? (
+                  <>
+                    <p className="text-lg">{scannedStudent.name}</p>
+                    <p className="text-md">{scannedStudent.food}</p>
+                    {scannedStudent.status && (
+                      <p className="text-md font-bold text-green-600">
+                        {scannedStudent.status}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-lg break-words">{qrData}</p>
+                )}
+                <div className="mt-4">
+                  <Button
+                    className="uppercase bg-blue-400 hover:bg-blue-500"
+                    onClick={() => setQrData(null)}
+                  >
+                    Clear Result
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className={`mt-2 p-4 min-w-[300px] bg-white ${retroStyle}`}>
                 <Text as="h3" className="text-xl mb-2">
                   Ready to Scan
                 </Text>
-                <p className="text-gray-600">Click Start Scan to begin.</p>
+                <Text as="p" className="text-gray-600">
+                  Click "Start Camera" and point the camera at the QR code.
+                </Text>
               </div>
             )}
           </div>

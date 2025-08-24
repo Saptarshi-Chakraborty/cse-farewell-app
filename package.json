@@ -15,6 +15,7 @@
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-visually-hidden": "^1.2.3",
+    "@zxing/library": "^0.21.3",
     "appwrite": "^18.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -24,6 +25,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-papaparse": "^4.4.0",
+    "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {

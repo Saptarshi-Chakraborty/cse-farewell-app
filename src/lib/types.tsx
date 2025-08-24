@@ -1,6 +1,12 @@
-export type Page = "stats" | "students" | "scan" | "login" | "profile" | "dashboard" | "students/[year]" | "students/bulk_upload";
-
-
+export type Page =
+  | "stats"
+  | "students"
+  | "scan"
+  | "login"
+  | "profile"
+  | "dashboard"
+  | "students/[year]"
+  | "students/bulk_upload";
 
 export type Student = {
   $id: string;
@@ -14,4 +20,11 @@ export type Student = {
 
 export type StudentsPageBodyProps = {
   year: string;
+};
+
+export type ScannedStudent = {
+  name: string;
+  food: string;
+  roll: string;
+  status?: string;
 };

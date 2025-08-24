@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/retroui/Table"; // switched to RetroUI
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import StudentDialog from "./StudentDialog";
 import {
   DATABASE_ID,
@@ -23,6 +23,7 @@ import {
   STUDENTS_COLLECTION_ID,
 } from "@/lib/appwrite";
 import { Text } from "../retroui/Text";
+import { Input } from "@/components/retroui/Input";
 
 type StudentsPageBodyProps = {
   year: string;
@@ -40,6 +41,11 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
     nonVegCount: 0,
     paidCount: 0,
   });
+  // sorting state
+  const [sortBy, setSortBy] = useState<"name" | "roll" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  // add: search state
+  const [query, setQuery] = useState("");
 
   const yearShortName = getYearShortName(year);
 
@@ -108,10 +114,56 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
 
   // Check authentication and fetch students
   useEffect(() => {
-    
-
     fetchStudents();
   }, [year, router]);
+
+  // add: sorting handler
+  const handleSort = (field: "name" | "roll") => {
+    if (sortBy === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
+    }
+  };
+
+  // add: filtered list by query
+  const filteredStudents = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return students;
+    return students.filter((s) => {
+      const name = (s.name ?? "").toLowerCase();
+      const email = (s.email ?? "").toLowerCase();
+      const roll = String(s.roll ?? "").toLowerCase();
+      return (
+        name.includes(q) ||
+        email.includes(q) ||
+        roll.includes(q)
+      );
+    });
+  }, [students, query]);
+
+  // update: memoized sorted list (sort after filtering)
+  const sortedStudents = useMemo(() => {
+    const base = filteredStudents;
+    if (!sortBy) return base;
+    const sorted = [...base];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === "name") {
+        cmp = (a.name || "").localeCompare(b.name || "", undefined, {
+          sensitivity: "base",
+        });
+      } else {
+        cmp = String(a.roll || "").localeCompare(String(b.roll || ""), undefined, {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [filteredStudents, sortBy, sortDir]);
 
   return (
     <main id="main-content">
@@ -121,6 +173,15 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
             {yearShortName} Year Students
           </Text>
           <div className="flex items-center gap-2 justify-center sm:justify-end">
+            {/* replace: use RetroUI Input */}
+            <Input
+              aria-label="Search students"
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search name, email, roll"
+              className="w-full sm:w-64 bg-white text-black"
+            />
             <Button
               className={`uppercase bg-blue-400 hover:bg-blue-500`}
               onClick={fetchStudents}
@@ -179,14 +240,34 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
         )}
 
         <Card className={`p-4 block`}>
-          {/* Add a horizontal scroll container for mobile */}
+          {/* ...existing code... */}
           <div className="w-full overflow-x-auto">
             <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-lg text-black">#</TableHead>
-                  <TableHead className="text-lg text-black">Name</TableHead>
-                  <TableHead className="text-lg text-black">Roll No.</TableHead>
+                  <TableHead className="text-lg text-black">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1"
+                      onClick={() => handleSort("name")}
+                      title="Sort by Name"
+                    >
+                      Name
+                      {sortBy === "name" ? (sortDir === "asc" ? " ▲" : " ▼") : null}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-lg text-black">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1"
+                      onClick={() => handleSort("roll")}
+                      title="Sort by Roll No."
+                    >
+                      Roll No.
+                      {sortBy === "roll" ? (sortDir === "asc" ? " ▲" : " ▼") : null}
+                    </button>
+                  </TableHead>
                   <TableHead className="text-lg text-black">Email</TableHead>
                   <TableHead className="text-lg text-black">Food Pref.</TableHead>
                   <TableHead className="text-lg text-black">Payment</TableHead>
@@ -194,17 +275,20 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.length === 0 ? (
+                {sortedStudents.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={10}
                       className="text-center py-8 text-gray-500"
                     >
-                      No students found. Add some students to see them here.
+                      {query
+                        ? "No matching students found."
+                        : "No students found. Add some students to see them here."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  students.map((student, i) => (
+                  // render filtered + sorted students
+                  sortedStudents.map((student, i) => (
                     <TableRow key={student.$id}>
                       <TableCell className="text-base font-semibold">
                         {i + 1}
