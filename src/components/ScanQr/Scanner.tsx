@@ -6,6 +6,7 @@ import { Button } from "../retroui/Button";
 // Import an icon for the placeholder
 // import { QrCodeIcon } from "@heroicons/react/24/outline";
 import { ScanQrCode as QrCodeIcon } from "lucide-react";
+import FlashLightButton from "./FlashLightButton";
 // import { retroStyle } from "@/lib/styles";
 
 type VideoState = {
@@ -24,9 +25,9 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
   const codeReader = new BrowserMultiFormatReader();
 
   // State Variables
-  const [allVideoInputDevices, setAllVideoInputDevices] = useState<MediaDeviceInfo[]>(
-    []
-  );
+  const [allVideoInputDevices, setAllVideoInputDevices] = useState<
+    MediaDeviceInfo[]
+  >([]);
   const [currentCameraId, setCurrentCameraId] = useState<string | null>(null);
   const [videoState, setVideoState] = useState<VideoState>({
     gotPermissions: false,
@@ -35,6 +36,7 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
     errorMessage: null,
   });
   const [qrCodeResult, setQrCodeResult] = useState<string | null>(null);
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
 
   // Reference variables
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -86,12 +88,17 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
 
     try {
       const constraints: MediaStreamConstraints = {
-        video: currentCameraId ? { deviceId: { exact: currentCameraId } } : true,
+        video: currentCameraId
+          ? { deviceId: { exact: currentCameraId } }
+          : true,
         audio: false,
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       videoElement.srcObject = stream;
       videoElement.play();
+
+      // Store the media stream for flashlight control
+      setMediaStream(stream);
 
       setVideoState((prev) => ({ ...prev, cameraStarted: true }));
 
@@ -139,6 +146,9 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
     if (!src) return;
     src.getTracks().forEach((track: MediaStreamTrack) => track.stop());
     videoElement.srcObject = null;
+
+    // Clear the media stream
+    setMediaStream(null);
   }
 
   // ----- HOOCKs ----- //
@@ -147,7 +157,9 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
   useEffect(() => {
     getVideoPermission();
 
-    const el = document.getElementById("videoElement") as HTMLVideoElement | null;
+    const el = document.getElementById(
+      "videoElement"
+    ) as HTMLVideoElement | null;
     console.log(`display : ${el?.style.height}`);
 
     return () => {
@@ -189,10 +201,12 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
           id="videoElement"
           autoPlay
         />
-        
+
         {/* Placeholder when camera is not active */}
         {!videoState.cameraStarted && (
-          <div className={`w-full h-full bg-gray-800 flex items-center justify-center`}>
+          <div
+            className={`w-full h-full bg-gray-800 flex items-center justify-center`}
+          >
             <QrCodeIcon className="h-24 w-24 text-gray-500" />
           </div>
         )}
@@ -214,6 +228,7 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
           getCameraPermission={getVideoPermission}
           startCameraFunction={startCamera}
           stopCameraFunction={stopCamera}
+          mediaStream={mediaStream}
         />
 
         <p className="text-wrap d-none" ref={outputBoxRef} id="outputBox"></p>
@@ -227,6 +242,7 @@ type ActionButtonsProps = {
   getCameraPermission: () => void;
   startCameraFunction: () => void | Promise<void>;
   stopCameraFunction: () => void;
+  mediaStream: MediaStream | null;
 };
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -234,6 +250,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   getCameraPermission,
   startCameraFunction,
   stopCameraFunction,
+  mediaStream,
 }) => {
   return (
     <>
@@ -242,15 +259,24 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           Get Permissions
         </Button>
       ) : (
-        <div className="d-flex flex-wrap gap-1 ">
+        <div className="flex items-center gap-2">
           {videoState.cameraStarted === false ? (
-            <Button onClick={startCameraFunction} className="bg-green-400 hover:bg-green-500">
+            <Button
+              onClick={startCameraFunction}
+              className="bg-green-400 hover:bg-green-500"
+            >
               Start Camera
             </Button>
           ) : (
-            <Button onClick={stopCameraFunction} className="bg-destructive text-white/90 hover:bg-destructive border-black">
-              Stop Camera
-            </Button>
+            <>
+              <FlashLightButton videoStream={mediaStream} />
+              <Button
+                onClick={stopCameraFunction}
+                className="bg-destructive text-white/90 hover:bg-destructive border-black"
+              >
+                Stop Camera
+              </Button>
+            </>
           )}
         </div>
       )}
