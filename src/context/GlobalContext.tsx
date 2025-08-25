@@ -7,9 +7,17 @@ import {
   ReactNode,
   useContext,
   useCallback,
+  useEffect,
 } from "react";
 import { account } from "@/lib/appwrite";
 import { Models } from "appwrite";
+
+export const ROLES = {
+  ADMIN: "admin",
+  ORGANIZER: "organizer",
+} as const;
+
+export type Role = typeof ROLES[keyof typeof ROLES];
 
 type GlobalContextType = {
   user: Models.User<Models.Preferences> | null;
@@ -33,11 +41,10 @@ export function GlobalContextProvider({
     null
   );
   const [session, setSession] = useState<any>(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Start with true
 
   const checkAuth = useCallback(async () => {
     // Skip if we're already checking
-    if (isCheckingAuth) return;
 
     setIsCheckingAuth(true);
     try {
@@ -54,6 +61,10 @@ export function GlobalContextProvider({
       setIsCheckingAuth(false);
     }
   }, []); // Correct: Dependency array is empty
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   return (
     <GlobalContext.Provider

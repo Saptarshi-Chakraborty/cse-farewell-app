@@ -1,5 +1,6 @@
 // /pages/profile.tsx
 
+import withAuth from '@/components/auth/AuthHOC';
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -13,35 +14,15 @@ import {
   User,
   Utensils,
 } from "lucide-react";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
 
 const retroStyle =
   "border-2 border-black shadow-[4px_4px_0px_#2A2A2A] transition-all hover:shadow-[2px_2px_0px_#2A2A2A]";
 
 const ProfilePage = () => {
-  const router = useRouter();
-  // We get isCheckingAuth from the context, which is managed by the Header
-  const { user, isCheckingAuth } = useGlobalContext();
+  const { user } = useGlobalContext();
 
-  // This effect no longer initiates a check. It only handles redirecting
-  // the user away if the check has finished and no user was found.
-  useEffect(() => {
-    // Wait until the auth check is complete
-    if (!isCheckingAuth && !user) {
-      router.push("/login");
-    }
-  }, [user, isCheckingAuth, router]);
-
-  // Rely on the global isCheckingAuth for the loading state.
-  if (isCheckingAuth) {
-    return <div>Loading...</div>;
-  }
-
-  // If the check is done and there's no user, return null to prevent
-  // a "flash of content" while the redirect above is happening.
   if (!user) {
-    return null;
+    return null; // The HOC handles loading and redirection
   }
 
   return (
@@ -122,4 +103,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default withAuth(ProfilePage);

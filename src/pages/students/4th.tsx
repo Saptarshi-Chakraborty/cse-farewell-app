@@ -6,6 +6,8 @@ import StudentsPageBody from "@/components/Students/Body";
 import FeatureRule from "@/data/Feature.Rules.json";
 import Head from "next/head";
 import { Toaster } from "sonner";
+import { ROLES } from "@/context/GlobalContext";
+import withAuth from "@/components/auth/AuthHOC";
 
 const FourthYearStudents = () => {
   return (
@@ -24,4 +26,4 @@ const FourthYearStudents = () => {
   );
 };
 
-export default FourthYearStudents;
+export default withAuth(FourthYearStudents, { role: ROLES.ADMIN });

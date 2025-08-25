@@ -1,9 +1,11 @@
 "use client";
 
+import withAuth from "@/components/auth/AuthHOC";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { Toaster } from "@/components/retroui/Sonner";
 import StudentsPageBody from "@/components/Students/Body";
+import { ROLES } from "@/context/GlobalContext";
 import FeatureRule from "@/data/Feature.Rules.json";
 import Head from "next/head";
 
@@ -23,4 +25,4 @@ const ThirdYearStudents = () => {
   );
 };
 
-export default ThirdYearStudents;
+export default withAuth(ThirdYearStudents, { role: ROLES.ADMIN });

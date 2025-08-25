@@ -3,15 +3,15 @@
 
 import { Button } from "@/components/retroui/Button";
 import { Select } from "@/components/retroui/Select";
-import { useEffect, useState } from "react";
 import { useGlobalContext } from "@/context/GlobalContext";
-import { LogOut, Menu, LogIn } from "lucide-react";
+import FeatureRule from "@/data/Feature.Rules.json";
 import { deleteSession } from "@/lib/appwrite";
 import { Page } from "@/lib/types";
-import { useRouter } from "next/router"; // Correct: Use router from 'next/router'
+import { LogIn, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/router"; // Correct: Use router from 'next/router'
+import { useState } from "react";
 import { Text } from "./retroui/Text";
-import FeatureRule from "@/data/Feature.Rules.json";
 
 export default function Header() {
   const { checkAuth, user } = useGlobalContext();
@@ -28,7 +28,7 @@ export default function Header() {
   const handleLogout = async () => {
     await deleteSession();
     await checkAuth(); // Re-check auth after logout to update state
-    router.push("/login");
+    router.push("/");
   };
 
   const toggleMobileMenu = () => {

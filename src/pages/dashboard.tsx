@@ -6,8 +6,10 @@ import { Card } from "@/components/retroui/Card";
 import { Text } from "@/components/retroui/Text";
 import Link from "next/link";
 import ROUTES from "@/data/Routes";
+import withAuth from '@/components/auth/AuthHOC';
+import { ROLES } from "@/context/GlobalContext";
 
-export default function Dashboard() {
+function Dashboard() {
   const navigationCards = ROUTES.filter((r) => r.showInDashboard);
 
   return (
@@ -38,3 +40,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+export default withAuth(Dashboard, {role: ROLES.ADMIN});

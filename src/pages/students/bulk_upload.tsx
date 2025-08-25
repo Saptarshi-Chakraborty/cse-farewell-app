@@ -1,9 +1,11 @@
 "use client";
 
+import withAuth from "@/components/auth/AuthHOC";
 import BulkUploadPageBody from "@/components/BulkUploadData/Body";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { Toaster } from "@/components/retroui/Sonner";
+import { ROLES } from "@/context/GlobalContext";
 import FeatureRule from "@/data/Feature.Rules.json";
 import Head from "next/head";
 
@@ -26,4 +28,4 @@ const BulkUploadStudents = () => {
   );
 };
 
-export default BulkUploadStudents;
+export default withAuth(BulkUploadStudents, { role: ROLES.ADMIN });
