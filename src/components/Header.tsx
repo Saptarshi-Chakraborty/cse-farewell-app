@@ -39,13 +39,15 @@ export default function Header() {
     handlePageChange(`students/${year}` as Page);
   };
 
-  const isAdmin = user?.labels?.includes('admin');
+  const isAdmin = user?.labels?.includes("admin");
 
   return (
     <header className="relative">
       <div className="flex justify-between items-center mb-0 md:mb-4 pb-4 border-b-4 border-black">
         <Link href="/">
-          <Text as="h1" className="text-3xl md:text-4xl ">{FeatureRule?.appName?.toUpperCase()}</Text>
+          <Text as="h1" className="text-3xl md:text-4xl ">
+            {FeatureRule?.appName?.toUpperCase()}
+          </Text>
         </Link>
 
         {user ? (
@@ -62,14 +64,7 @@ export default function Header() {
                   >
                     Dashboard
                   </Button>
-                  <Button
-                    variant={activePage === "stats" ? "default" : "outline"}
-                    size="sm"
-                    className="uppercase"
-                    onClick={() => handlePageChange("stats" as Page)}
-                  >
-                    Stats
-                  </Button>
+
                   <Select onValueChange={handleStudentYearSelect}>
                     <Select.Trigger className="uppercase">
                       <Select.Value placeholder="Students" />
@@ -83,16 +78,20 @@ export default function Header() {
                       </Select.Group>
                     </Select.Content>
                   </Select>
-                  <Button
-                    variant={activePage === "scan" ? "default" : "outline"}
-                    size="sm"
-                    className="uppercase"
-                    onClick={() => handlePageChange("scan")}
-                  >
-                    Scan QR
-                  </Button>
+
+                  {FeatureRule?.enableQrScan && (
+                    <Button
+                      variant={activePage === "scan" ? "default" : "outline"}
+                      size="sm"
+                      className="uppercase"
+                      onClick={() => handlePageChange("scan")}
+                    >
+                      Scan QR
+                    </Button>
+                  )}
                 </nav>
               )}
+
               {/* Logout Button for all logged in users */}
               <Button
                 variant="outline"
@@ -120,20 +119,24 @@ export default function Header() {
                 {isAdmin && (
                   <>
                     <Button
-                      variant={activePage === "dashboard" ? "default" : "outline"}
+                      variant={
+                        activePage === "dashboard" ? "default" : "outline"
+                      }
                       className="uppercase w-full"
-                      onClick={() => { handlePageChange("dashboard"); toggleMobileMenu(); }}
+                      onClick={() => {
+                        handlePageChange("dashboard");
+                        toggleMobileMenu();
+                      }}
                     >
                       Dashboard
                     </Button>
-                    <Button
-                      variant={activePage === "stats" ? "default" : "outline"}
-                      className="uppercase w-full"
-                      onClick={() => { handlePageChange("stats"); toggleMobileMenu(); }}
+
+                    <Select
+                      onValueChange={(value) => {
+                        handleStudentYearSelect(value);
+                        toggleMobileMenu();
+                      }}
                     >
-                      Stats
-                    </Button>
-                    <Select onValueChange={(value) => { handleStudentYearSelect(value); toggleMobileMenu(); }}>
                       <Select.Trigger className="uppercase w-full">
                         <Select.Value placeholder="Students" />
                       </Select.Trigger>
@@ -146,20 +149,29 @@ export default function Header() {
                         </Select.Group>
                       </Select.Content>
                     </Select>
-                    <Button
-                      variant={activePage === "scan" ? "default" : "outline"}
-                      className="uppercase w-full"
-                      onClick={() => { handlePageChange("scan"); toggleMobileMenu(); }}
-                    >
-                      Scan QR
-                    </Button>
+
+                    {FeatureRule?.enableQrScan && (
+                      <Button
+                        variant={activePage === "scan" ? "default" : "outline"}
+                        className="uppercase w-full"
+                        onClick={() => {
+                          handlePageChange("scan");
+                          toggleMobileMenu();
+                        }}
+                      >
+                        Scan QR
+                      </Button>
+                    )}
                   </>
                 )}
                 <Button
                   variant="outline"
                   size="sm"
                   className="uppercase bg-red-100 hover:bg-red-200 w-full"
-                  onClick={() => { handleLogout(); toggleMobileMenu(); }}
+                  onClick={() => {
+                    handleLogout();
+                    toggleMobileMenu();
+                  }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout

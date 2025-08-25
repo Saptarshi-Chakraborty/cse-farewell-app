@@ -9,7 +9,7 @@ export default function Home() {
     <>
       <Head>
         <title>
-          {FeatureRule.appName} - {FeatureRule.appShortDescription}
+          {`${FeatureRule.appName} - ${FeatureRule.appShortDescription}`}
         </title>
         <meta name="description" content={FeatureRule.metaTags.description} />
         <meta

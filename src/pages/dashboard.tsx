@@ -1,19 +1,25 @@
 "use client";
 
+import withAuth from "@/components/auth/AuthHOC";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { Card } from "@/components/retroui/Card";
 import { Text } from "@/components/retroui/Text";
-import Link from "next/link";
-import ROUTES from "@/data/Routes";
-import withAuth from '@/components/auth/AuthHOC';
 import { ROLES } from "@/context/GlobalContext";
+import FeatureRule from "@/data/Feature.Rules.json";
+import ROUTES from "@/data/Routes";
+import Head from "next/head";
+import Link from "next/link";
 
 function Dashboard() {
   const navigationCards = ROUTES.filter((r) => r.showInDashboard);
 
   return (
     <>
+      <Head>
+        <title>{`Dashboard | ${FeatureRule?.appName}`}</title>
+      </Head>
+
       <div className="p-4 md:p-8">
         <Header />
         <main className="py-8">
@@ -41,4 +47,4 @@ function Dashboard() {
   );
 }
 
-export default withAuth(Dashboard, {role: ROLES.ADMIN});
+export default withAuth(Dashboard, { role: ROLES.ADMIN });
