@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader, NotFoundException } from "@zxing/library";
 import AllVideoDevicesDropdown from "./AllVideoDevicesDropdown";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Button } from "../retroui/Button";
 // Import an icon for the placeholder
 // import { QrCodeIcon } from "@heroicons/react/24/outline";
@@ -143,7 +143,7 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
       );
     } catch (err) {
       console.log(err);
-      alert("Error in starting camera");
+      toast.error("Error in starting camera");
     }
   }
 

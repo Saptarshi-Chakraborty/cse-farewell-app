@@ -27,6 +27,7 @@ import {
 
 import { retroStyle } from "@/lib/styles";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type StudentDoc = {
   $id?: string;
@@ -155,7 +156,7 @@ const StudentDialog = ({
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving student:", error);
-      alert("Failed to save student. Please try again.");
+      toast.error("Failed to save student. Please try again.");
     }
   }
 

@@ -9,6 +9,7 @@ import { useGlobalContext } from "@/context/GlobalContext";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/router";
 import { Text } from "../retroui/Text";
+import { toast } from "sonner";
 
 const LoginPageBody = () => {
   const router = useRouter();
@@ -22,13 +23,13 @@ const LoginPageBody = () => {
 
   const handleEmailSubmit = async () => {
     if (!email) {
-      alert("Please enter your email.");
+      toast.warning("Please enter your email.");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      alert("Please enter a valid email address.");
+      toast.warning("Please enter a valid email address.");
       return;
     }
 
@@ -40,10 +41,11 @@ const LoginPageBody = () => {
       userIdRef.current = userId;
 
       console.log("OTP sent to:", email, "User ID:", userId);
-      alert(`OTP sent to ${email}. Please check your inbox.`);
+      toast.success(`OTP sent to ${email}. Please check your inbox.`);
+
     } catch (error) {
       console.error("Error sending OTP:", error);
-      alert("Failed to send OTP. Please try again.");
+      toast.error("Failed to send OTP. Please try again.");
     } finally {
       setLoading(false); // Hide loading indicator
     }
@@ -51,7 +53,7 @@ const LoginPageBody = () => {
 
   const handleOtpSubmit = async () => {
     if (!otp) {
-      alert("Please enter the OTP.");
+      toast.warning("Please enter the OTP.");
       return;
     }
 
@@ -77,11 +79,12 @@ const LoginPageBody = () => {
       }
 
       console.log("Session created:", session);
-      alert("OTP Verified! You are now logged in.");
+      toast.success("OTP Verified! You are now logged in.");
       // Optionally, update global context or redirect user after login
+      
     } catch (error) {
       console.error("Error verifying OTP:", error);
-      alert("Failed to verify OTP. Please try again.");
+      toast.error("Failed to verify OTP. Please try again.");
     } finally {
       setLoading(false);
     }

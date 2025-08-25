@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from "@/components/retroui/Button";
-import { retroStyle } from "@/lib/styles";
 import { Flashlight } from "lucide-react";
+
+// Add DOM type augmentations for non-standard torch support
+declare global {
+  interface MediaTrackCapabilities {
+    torch?: boolean;
+  }
+  interface MediaTrackConstraintSet {
+    torch?: boolean;
+  }
+}
 
 type FlashLightButtonProps = {
   videoStream: MediaStream | null;

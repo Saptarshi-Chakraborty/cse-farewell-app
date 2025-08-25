@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from "sonner";
 
 const BulkUploadPageBody = () => {
   const { readString } = usePapaParse();
@@ -113,7 +114,9 @@ const BulkUploadPageBody = () => {
       !columnMapping.email ||
       !columnMapping.roll
     ) {
-      alert("Please select year and map required fields (name, email, roll)");
+      toast.warning(
+        "Please select year and map required fields (name, email, roll)"
+      );
       return;
     }
 
@@ -147,7 +150,9 @@ const BulkUploadPageBody = () => {
     }
 
     setUploading(false);
-    alert(`Upload complete!\nSuccessful: ${successful}\nFailed: ${failed}`);
+    toast.success("Upload complete!", {
+      description: `\nSuccessful: ${successful}\nFailed: ${failed}`,
+    });
     setShowPreview(false);
   };
 

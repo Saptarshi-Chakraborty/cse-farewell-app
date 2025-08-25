@@ -102,21 +102,21 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   }
 
   const handleAddStudent = () => {
-    if (!canEdit) return alert("Editing is disabled.");
+    // if (!canEdit) return toast.error("Editing is disabled.");
     setSelectedStudent(null);
     setModalMode("add");
     setIsModalOpen(true);
   };
 
   const handleEditStudent = (student: Student) => {
-    if (!canEdit) return alert("Editing is disabled.");
+    if (!canEdit) return toast.error("Editing is disabled.");
     setSelectedStudent(student);
     setModalMode("edit");
     setIsModalOpen(true);
   };
 
   const handleDeleteStudent = async (id: string) => {
-    if (!canEdit) return alert("Editing is disabled.");
+    if (!canEdit) return toast.error("Editing is disabled.");
     if (window.confirm("Are you sure you want to delete this student?")) {
       try {
         await databases.deleteDocument(DATABASE_ID, STUDENTS_COLLECTION_ID, id);
@@ -126,7 +126,7 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
         setStats(calculateStats(updated));
       } catch (error) {
         console.error("Error deleting student:", error);
-        alert("Failed to delete student. Please try again.");
+        toast.error("Failed to delete student. Please try again.");
       }
     }
   };
@@ -386,6 +386,8 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
               placeholder="Search name, email, roll"
               className="w-full sm:w-64 bg-white text-black"
             />
+
+            {/* Refresh Button */}
             <Button
               className={`uppercase bg-blue-400 hover:bg-blue-500`}
               onClick={fetchStudents}
@@ -407,18 +409,68 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
                 {loading ? "Refreshing..." : "Refresh List"}
               </span>
             </Button>
-            {canEdit && (
-              <Button
-                className={`uppercase bg-green-400 hover:bg-green-500`}
-                onClick={handleAddStudent}
-                disabled={loading}
-              >
-                <PlusCircle className="h-5 w-5" />
-                <span className="hidden sm:inline ml-2">Add Student</span>
-              </Button>
-            )}
+
+            {/* Add Student Button */}
+            <Button
+              className={`uppercase bg-green-400 hover:bg-green-500`}
+              onClick={handleAddStudent}
+              disabled={loading}
+            >
+              <PlusCircle className="h-5 w-5" />
+              <span className="hidden sm:inline ml-2">Add Student</span>
+            </Button>
           </div>
         </div>
+
+        {/* add: inline loading banner */}
+        {loading && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center gap-2 text-gray-600"
+          >
+            <svg
+              className="h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M12 2a10 10 0 0 1 10 10h-4A6 6 0 0 0 12 6V2z"
+              />
+            </svg>
+            <span>Loading students...</span>
+          </div>
+        )}
+
+        {/* add: stats skeleton while loading and before data arrives */}
+        {loading && students.length === 0 && (
+          <Card className={`${retroStyle} p-4 block animate-pulse`}>
+            <div className="flex justify-around items-center">
+              <div className="space-y-1 text-center">
+                <div className="h-6 w-10 bg-gray-300 rounded mx-auto" />
+                <div className="h-4 w-16 bg-gray-200 rounded mx-auto" />
+              </div>
+              <div className="space-y-1 text-center">
+                <div className="h-6 w-10 bg-gray-300 rounded mx-auto" />
+                <div className="h-4 w-20 bg-gray-2 00 rounded mx-auto" />
+              </div>
+              <div className="space-y-1 text-center">
+                <div className="h-6 w-12 bg-gray-300 rounded mx-auto" />
+                <div className="h-4 w-24 bg-gray-200 rounded mx-auto" />
+              </div>
+            </div>
+          </Card>
+        )}
 
         {students.length > 0 && (
           <Card className={`${retroStyle} p-4 block`}>
@@ -447,7 +499,7 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
 
         <Card className="p-4 block">
           <div className="w-full overflow-x-auto">
-            <Table className="min-w-[720px]">
+            <Table className="min-w-[720px]" aria-busy={loading}>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-lg text-black">#</TableHead>
@@ -494,7 +546,38 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedStudents.length === 0 ? (
+                {/* change: show loading row while fetching */}
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      className="text-center py-8 text-gray-500"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <svg
+                          className="h-5 w-5 animate-spin"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M12 2a10 10 0 0 1 10 10h-4A6 6 0 0 0 12 6V2z"
+                          />
+                        </svg>
+                        <span>Loading students...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : sortedStudents.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={10}

@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import ScanQrBody from "@/components/ScanQr/Body";
 import Head from "next/head";
 import FeatureRule from "@/data/Feature.Rules.json";
+import { Toaster } from "@/components/retroui/Sonner";
 
 export default function ScanQrPage() {
   return (
@@ -19,6 +20,8 @@ export default function ScanQrPage() {
         <ScanQrBody />
         <Footer />
       </div>
+
+      <Toaster />
     </>
   );
 }
