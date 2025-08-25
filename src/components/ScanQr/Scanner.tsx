@@ -18,7 +18,8 @@ type VideoState = {
 
 type ScannerProps = {
   qrData: string | null;
-  setQrData: (value: string) => void;
+  // allow async handler
+  setQrData: (value: string) => void | Promise<void>;
 };
 
 const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
