@@ -20,9 +20,11 @@ type ScannerProps = {
   qrData: string | null;
   // allow async handler
   setQrData: (value: string) => void | Promise<void>;
+  // new: auto start camera when true
+  autoStart?: boolean;
 };
 
-const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
+const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false }) => {
   // Use a stable ZXing reader instance across renders
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   if (!codeReaderRef.current) {
@@ -203,6 +205,18 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData }) => {
   }
 
   // ----- HOOCKs ----- //
+
+  // Auto-start camera when requested (used after Clear Result).
+  useEffect(() => {
+    if (!autoStart) return;
+    if (videoState.cameraStarted) return;
+    if (videoState.gotPermissions) {
+      startCamera();
+    } else {
+      // request permission; once granted, effect will run again and start camera
+      getVideoPermission();
+    }
+  }, [autoStart, videoState.gotPermissions, videoState.cameraStarted]);
 
   // Global listeners to defensively stop camera on tab hide/leave
   useEffect(() => {

@@ -46,6 +46,11 @@ const ScanQrBody = () => {
     useState<LocalScannedStudent | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // new: auto-start camera after clearing result
+  const [autoStartOnMount, setAutoStartOnMount] = useState(false);
+
+  // derived UI state: show result only while verifying or after success
+  const showResultBox = verifying || Boolean(scannedStudent);
 
   const handleQrData = async (data: string) => {
     setQrData(data);
@@ -122,36 +127,29 @@ const ScanQrBody = () => {
 
         <Card className={`${retroStyle} p-6 block`}>
           <div className="flex flex-col items-center w-full">
-            {/* Custom QR Scanner with fixed dimensions */}
-            <div className="mb-4 w-full">
-              <Scanner qrData={qrData} setQrData={handleQrData} />
-            </div>
+            {/* Scanner is hidden while verifying or after a successful scan */}
+            {!showResultBox && (
+              <div className="mb-4 w-full">
+                <Scanner
+                  qrData={qrData}
+                  setQrData={handleQrData}
+                  autoStart={autoStartOnMount}
+                />
+              </div>
+            )}
 
-            {/* Result / Helper */}
-            {qrData ? (
-              // change: center-align result area
+            {/* Result box only during verifying or after success */}
+            {showResultBox && (
               <div
-                className={`mt-2 p-4 min-w-[300px] bg-white text-center ${retroStyle} ${
-                  errorMessage ? "border border-red-500" : ""
-                }`}
+                className={`mt-2 p-4 min-w-[300px] bg-white text-center ${retroStyle}`}
               >
                 <Text as="h3" className="text-xl mb-2">
                   Scan Result
                 </Text>
 
                 {verifying ? (
-                  // change: center-align verifying state
                   <p className="text-gray-600">Verifying QR...</p>
-                ) : errorMessage ? (
-                  // change: center-align error state
-                  <>
-                    <p className="text-red-600 font-semibold">{errorMessage}</p>
-                    <p className="text-sm text-gray-600 break-words mt-1">
-                      QR: {qrData}
-                    </p>
-                  </>
                 ) : scannedStudent ? (
-                  // change: show name, roll, year, and food badge in center
                   <>
                     <p className="text-2xl font-semibold mb-1">
                       {scannedStudent.name}
@@ -160,57 +158,49 @@ const ScanQrBody = () => {
                       {/* Food Preference Badge */}
                       <div className="text-md">
                         {scannedStudent.food === "Veg" ? (
-                          <Badge  className="bg-green-500 text-black">
-                            Veg
-                          </Badge>
+                          <Badge className="bg-green-500 text-black">Veg</Badge>
                         ) : scannedStudent.food === "Non Veg" ? (
-                          <Badge className="bg-red-500 text-white">
-                            Non&nbsp;Veg
-                          </Badge>
+                          <Badge className="bg-red-500 text-white">Non&nbsp;Veg</Badge>
                         ) : (
                           <Badge className="bg-gray-500">N/A</Badge>
                         )}
                       </div>
 
-                      <Text as="p"  className="mt-3">Roll: {scannedStudent.roll}</Text>
-                      <p className="text-md">
+                      <Text as="p" className="mt-3">
+                        Roll: {scannedStudent.roll}
+                      </Text>
+                      <Text as="p" className="text-md">
                         Year: {scannedStudent.year || "N/A"}
-                      </p>
+                      </Text>
                     </div>
                     {scannedStudent.status && (
-                      <p className="mt-2 text-md font-bold text-green-600">
+                      <Text
+                        as="p"
+                        className="mt-2 text-md font-bold text-green-600"
+                      >
                         {scannedStudent.status}
-                      </p>
+                      </Text>
                     )}
                   </>
-                ) : (
-                  <p className="text-lg break-words">{qrData}</p>
-                )}
+                ) : null}
 
                 <div className="mt-4 flex justify-center">
                   <Button
                     className="uppercase bg-blue-400 hover:bg-blue-500"
                     onClick={() => {
+                      // trigger auto-start for next scan
+                      setAutoStartOnMount(true);
+                      // ensure result box hides and scanner mounts
+                      setVerifying(false);
+                      // clear previous result
                       setQrData(null);
                       setScannedStudent(null);
                       setErrorMessage(null);
                     }}
                   >
-                    Clear Result
+                    Scan Again
                   </Button>
                 </div>
-              </div>
-            ) : (
-              // change: center-align empty/help state
-              <div
-                className={`mt-2 p-4 min-w-[300px] bg-white text-center ${retroStyle}`}
-              >
-                <Text as="h3" className="text-xl mb-2">
-                  Ready to Scan
-                </Text>
-                <Text as="p" className="text-gray-600">
-                  Click "Start Camera" and point the camera at the QR code.
-                </Text>
               </div>
             )}
           </div>
@@ -221,3 +211,4 @@ const ScanQrBody = () => {
 };
 
 export default ScanQrBody;
+                
