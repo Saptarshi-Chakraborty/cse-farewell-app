@@ -2,18 +2,10 @@
 
 import { Student } from "@/lib/types";
 import { retroStyle } from "@/lib/styles";
-import { Pencil, PlusCircle, Trash2, Mail } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/retroui/Button";
 import { Card } from "@/components/retroui/Card";
 import { useRouter } from "next/router";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/retroui/Table"; // switched to RetroUI
 import { useEffect, useState, useMemo } from "react";
 import StudentDialog from "./StudentDialog";
 import {
@@ -26,9 +18,10 @@ import {
 } from "@/lib/appwrite";
 import { Text } from "../retroui/Text";
 import { Input } from "@/components/retroui/Input";
-import featureRules from "@/data/Feature.Rules.json";
-import { Badge } from "../retroui/Badge";
+import FeatureRules from "@/data/Feature.Rules.json";
 import { toast } from "sonner";
+import StudentsStats from "./StudentsStats";
+import StudentsTable from "./StudentsTable"; // Import the new component
 
 type StudentsPageBodyProps = {
   year: string;
@@ -39,38 +32,22 @@ type LocalStudent = Student & { coupon_generated?: boolean | null };
 
 const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   const router = useRouter();
-  // change: use LocalStudent[] so we can read coupon_generated
   const [students, setStudents] = useState<LocalStudent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({
-    vegCount: 0,
-    nonVegCount: 0,
-    paidCount: 0,
-  });
-  // sorting state
-  const [sortBy, setSortBy] = useState<"name" | "roll" | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  // add: search state
+  // Remove sorting state - it's moved to StudentsTable
+  // const [sortBy, setSortBy] = useState<"name" | "roll" | null>(null);
+  // const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [query, setQuery] = useState("");
   const [emailSendLoading, setEmailSendLoading] = useState(false);
 
   // feature flags
-  const canEdit = !!featureRules.enableEditing;
-  const canEmail = !!featureRules.enableEmailSending;
+  const canEdit = !!FeatureRules.enableEditing;
+  const canEmail = !!FeatureRules.enableEmailSending;
 
   const yearShortName = getYearShortName(year);
-
-  const calculateStats = (studentList: Student[]) => {
-    return {
-      vegCount: studentList.filter((s) => s.food_preference === "veg").length,
-      nonVegCount: studentList.filter((s) => s.food_preference === "non-veg")
-        .length,
-      paidCount: studentList.filter((s) => s.payment_method).length,
-    };
-  };
 
   async function fetchStudents() {
     setLoading(true);
@@ -92,8 +69,6 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
         coupon_generated: Boolean(doc.coupon_generated),
       })) as LocalStudent[];
       setStudents(fetchedStudents);
-      // Calculate stats after fetching students
-      setStats(calculateStats(fetchedStudents));
     } catch (error) {
       console.error("Error fetching students:", error);
     } finally {
@@ -123,7 +98,6 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
         // Recompute with updated list
         const updated = students.filter((s) => s.$id !== id);
         setStudents(updated);
-        setStats(calculateStats(updated));
       } catch (error) {
         console.error("Error deleting student:", error);
         toast.error("Failed to delete student. Please try again.");
@@ -135,6 +109,11 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   const handleSendEmail = async (student: LocalStudent): Promise<void> => {
     if (!canEmail) {
       toast.error("Email sending is disabled", { richColors: true });
+      return;
+    }
+
+    if (student.payment_method === null) {
+      toast.error("Cannot send email to unpaid student.", { richColors: true });
       return;
     }
 
@@ -239,11 +218,6 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
       return;
     }
 
-    if (student.payment_method == null) {
-      toast.error("Payment not done. Can not send email.");
-      return;
-    }
-
     if (food !== "veg" && food !== "non-veg") {
       toast.error("Food preference not selected.");
       return;
@@ -321,17 +295,17 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
     fetchStudents();
   }, [year, router]);
 
-  // add: sorting handler
-  const handleSort = (field: "name" | "roll") => {
-    if (sortBy === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortBy(field);
-      setSortDir("asc");
-    }
-  };
+  // Remove handleSort function - it's moved to StudentsTable
+  // const handleSort = (field: "name" | "roll") => {
+  //   if (sortBy === field) {
+  //     setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+  //   } else {
+  //     setSortBy(field);
+  //     setSortDir("asc");
+  //   }
+  // };
 
-  // add: filtered list by query
+  // Keep the filtered list by query logic
   const filteredStudents = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return students;
@@ -343,31 +317,31 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
     });
   }, [students, query]);
 
-  // update: memoized sorted list (sort after filtering)
-  const sortedStudents = useMemo(() => {
-    const base = filteredStudents;
-    if (!sortBy) return base;
-    const sorted = [...base];
-    sorted.sort((a, b) => {
-      let cmp = 0;
-      if (sortBy === "name") {
-        cmp = (a.name || "").localeCompare(b.name || "", undefined, {
-          sensitivity: "base",
-        });
-      } else {
-        cmp = String(a.roll || "").localeCompare(
-          String(b.roll || ""),
-          undefined,
-          {
-            numeric: true,
-            sensitivity: "base",
-          }
-        );
-      }
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-    return sorted;
-  }, [filteredStudents, sortBy, sortDir]);
+  // Remove the sorting logic - it's moved to StudentsTable
+  // const sortedStudents = useMemo(() => {
+  //   const base = filteredStudents;
+  //   if (!sortBy) return base;
+  //   const sorted = [...base];
+  //   sorted.sort((a, b) => {
+  //     let cmp = 0;
+  //     if (sortBy === "name") {
+  //       cmp = (a.name || "").localeCompare(b.name || "", undefined, {
+  //         sensitivity: "base",
+  //       });
+  //     } else {
+  //       cmp = String(a.roll || "").localeCompare(
+  //         String(b.roll || ""),
+  //         undefined,
+  //         {
+  //           numeric: true,
+  //           sensitivity: "base",
+  //         }
+  //       );
+  //     }
+  //     return sortDir === "asc" ? cmp : -cmp;
+  //   });
+  //   return sorted;
+  // }, [filteredStudents, sortBy, sortDir]);
 
   return (
     <main id="main-content">
@@ -377,7 +351,6 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
             {yearShortName} Year Students
           </Text>
           <div className="flex items-center gap-2 justify-center sm:justify-end">
-            {/* replace: use RetroUI Input */}
             <Input
               aria-label="Search students"
               type="search"
@@ -387,7 +360,6 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
               className="w-full sm:w-64 bg-white text-black"
             />
 
-            {/* Refresh Button */}
             <Button
               className={`uppercase bg-blue-400 hover:bg-blue-500`}
               onClick={fetchStudents}
@@ -410,7 +382,6 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
               </span>
             </Button>
 
-            {/* Add Student Button */}
             <Button
               className={`uppercase bg-green-400 hover:bg-green-500`}
               onClick={handleAddStudent}
@@ -422,262 +393,20 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
           </div>
         </div>
 
-        {/* add: inline loading banner */}
-        {loading && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="flex items-center gap-2 text-gray-600"
-          >
-            <svg
-              className="h-4 w-4 animate-spin"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M12 2a10 10 0 0 1 10 10h-4A6 6 0 0 0 12 6V2z"
-              />
-            </svg>
-            <span>Loading students...</span>
-          </div>
-        )}
-
-        {/* add: stats skeleton while loading and before data arrives */}
-        {loading && students.length === 0 && (
-          <Card className={`${retroStyle} p-4 block animate-pulse`}>
-            <div className="flex justify-around items-center">
-              <div className="space-y-1 text-center">
-                <div className="h-6 w-10 bg-gray-300 rounded mx-auto" />
-                <div className="h-4 w-16 bg-gray-200 rounded mx-auto" />
-              </div>
-              <div className="space-y-1 text-center">
-                <div className="h-6 w-10 bg-gray-300 rounded mx-auto" />
-                <div className="h-4 w-20 bg-gray-2 00 rounded mx-auto" />
-              </div>
-              <div className="space-y-1 text-center">
-                <div className="h-6 w-12 bg-gray-300 rounded mx-auto" />
-                <div className="h-4 w-24 bg-gray-200 rounded mx-auto" />
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {students.length > 0 && (
-          <Card className={`${retroStyle} p-4 block`}>
-            <div className="flex justify-around items-center">
-              <div className="text-center">
-                <Text as="h4" className="text-green-600">
-                  {stats.vegCount}
-                </Text>
-                <Text as="p">Veg</Text>
-              </div>
-              <div className="text-center">
-                <Text as="h4" className="text-red-600">
-                  {stats.nonVegCount}
-                </Text>
-                <Text as="p">Non-Veg</Text>
-              </div>
-              <div className="text-center">
-                <Text as="h4" className="text-blue-600">
-                  {stats.paidCount}
-                </Text>
-                <Text as="p">Paid Students</Text>
-              </div>
-            </div>
-          </Card>
-        )}
+        {/* Student Statistics */}
+        <StudentsStats students={students} loading={loading} />
 
         <Card className="p-4 block">
           <div className="w-full overflow-x-auto">
-            <Table className="min-w-[720px]" aria-busy={loading}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-lg text-black">#</TableHead>
-                  <TableHead className="text-lg text-black">
-                    <button
-                      type="button"
-                      className="flex items-center gap-1 cursor-pointer"
-                      onClick={() => handleSort("name")}
-                      title="Sort by Name"
-                    >
-                      Name
-                      {sortBy === "name"
-                        ? sortDir === "asc"
-                          ? " ▲"
-                          : " ▼"
-                        : null}
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-lg text-black">
-                    <button
-                      type="button"
-                      className="flex items-center gap-1 cursor-pointer"
-                      onClick={() => handleSort("roll")}
-                      title="Sort by Roll No."
-                    >
-                      Roll
-                      {sortBy === "roll"
-                        ? sortDir === "asc"
-                          ? " ▲"
-                          : " ▼"
-                        : null}
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-lg text-black">Email</TableHead>
-                  <TableHead className="text-lg text-black">
-                    Food Pref.
-                  </TableHead>
-                  <TableHead className="text-lg text-black">Payment</TableHead>
-                  {(canEmail || canEdit) && (
-                    <TableHead className="text-lg text-black">
-                      Actions
-                    </TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {/* change: show loading row while fetching */}
-                {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="text-center py-8 text-gray-500"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <svg
-                          className="h-5 w-5 animate-spin"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M12 2a10 10 0 0 1 10 10h-4A6 6 0 0 0 12 6V2z"
-                          />
-                        </svg>
-                        <span>Loading students...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : sortedStudents.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="text-center py-8 text-gray-500"
-                    >
-                      {query
-                        ? "No matching students found."
-                        : "No students found. Add some students to see them here."}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  // render filtered + sorted students
-                  sortedStudents.map((student, i) => (
-                    <TableRow key={student.$id}>
-                      <TableCell className="text-base font-semibold">
-                        {i + 1}
-                      </TableCell>
-                      <TableCell className="text-base">
-                        {student.name}
-                      </TableCell>
-                      <TableCell className="text-base">
-                        {student.roll}
-                      </TableCell>
-                      <TableCell className="text-base">
-                        {student.email}
-                      </TableCell>
-                      <TableCell className="text-base">
-                        {student.food_preference === "veg" ? (
-                          <Badge size="sm" className="bg-green-500 text-black">
-                            Veg
-                          </Badge>
-                        ) : student.food_preference === "non-veg" ? (
-                          <Badge size="sm" className="bg-red-500 text-white">
-                            Non&nbsp;Veg
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-gray-500">N/A</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-base">
-                        {student.payment_method || "N/A"}
-                      </TableCell>
-                      {(canEmail || canEdit) && (
-                        <TableCell className="space-x-1">
-                          <div className="flex space-x-2">
-                            {canEmail && (
-                              <Button
-                                className={`uppercase ${
-                                  student.coupon_generated
-                                    ? "bg-blue-400 hover:bg-blue-500" // Blue for resend
-                                    : "bg-green-400 hover:bg-green-500" // Green for initial send
-                                }`}
-                                onClick={() => handleSendEmail(student)}
-                                disabled={loading}
-                                title={
-                                  student.coupon_generated
-                                    ? "Resend Email"
-                                    : "Send Email"
-                                }
-                              >
-                                <Mail className="h-4 w-4" />
-                                <span className="hidden sm:inline ml-2">
-                                  {student.coupon_generated
-                                    ? "Resend Email"
-                                    : "Send Email"}
-                                </span>
-                              </Button>
-                            )}
-                            {canEdit && (
-                              <>
-                                {/* Edit Student Button */}
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className={retroStyle}
-                                  onClick={() => handleEditStudent(student)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-
-                                {/* Delete Student Button */}
-                                <Button
-                                  size="icon"
-                                  className="bg-destructive text-white hover:bg-destructive/90 border-black"
-                                  onClick={() =>
-                                    handleDeleteStudent(String(student.$id))
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            {/* Update to pass filteredStudents instead of sortedStudents */}
+            <StudentsTable
+              students={filteredStudents}
+              loading={loading}
+              query={query}
+              handleEditStudent={handleEditStudent}
+              handleDeleteStudent={handleDeleteStudent}
+              handleSendEmail={handleSendEmail}
+            />
           </div>
         </Card>
       </section>
