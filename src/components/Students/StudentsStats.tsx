@@ -3,6 +3,7 @@ import { Card } from "@/components/retroui/Card";
 import { Text } from "@/components/retroui/Text";
 import { retroStyle } from "@/lib/styles";
 import { useMemo } from "react";
+import FeatureRules from "@/data/Feature.Rules.json";
 
 type StudentsStatsProps = {
   students: Student[];
@@ -10,12 +11,17 @@ type StudentsStatsProps = {
 };
 
 const StudentsStats = ({ students, loading }: StudentsStatsProps) => {
+  // Check if QR scanning is enabled
+  const enableQrScan = FeatureRules.enableQrScan;
+
   // Calculate stats internally based on the provided students
   const stats = useMemo(() => {
     return {
       vegCount: students.filter((s) => s.food_preference === "veg").length,
-      nonVegCount: students.filter((s) => s.food_preference === "non-veg").length,
+      nonVegCount: students.filter((s) => s.food_preference === "non-veg")
+        .length,
       paidCount: students.filter((s) => s.payment_method).length,
+      redeemedCount: students.filter((s) => s.coupon_redeemed).length,
     };
   }, [students]);
 
@@ -36,6 +42,12 @@ const StudentsStats = ({ students, loading }: StudentsStatsProps) => {
             <div className="h-6 w-12 bg-gray-300 rounded mx-auto" />
             <div className="h-4 w-24 bg-gray-200 rounded mx-auto" />
           </div>
+          {enableQrScan && (
+            <div className="space-y-1 text-center">
+              <div className="h-6 w-12 bg-gray-300 rounded mx-auto" />
+              <div className="h-4 w-24 bg-gray-200 rounded mx-auto" />
+            </div>
+          )}
         </div>
       </Card>
     );
@@ -65,8 +77,19 @@ const StudentsStats = ({ students, loading }: StudentsStatsProps) => {
           <Text as="h4" className="text-blue-600">
             {stats.paidCount}
           </Text>
-          <Text as="p">Paid Students</Text>
+          <Text as="p">
+            Paid
+            <span className="hidden lg:inline"> Students</span>
+          </Text>
         </div>
+        {enableQrScan && (
+          <div className="text-center">
+            <Text as="h4" className="text-purple-600">
+              {stats.redeemedCount}
+            </Text>
+            <Text as="p">Redeemed</Text>
+          </div>
+        )}
       </div>
     </Card>
   );

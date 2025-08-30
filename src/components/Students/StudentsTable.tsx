@@ -41,7 +41,7 @@ const StudentsTable = ({
   handleDeleteStudent,
   onStudentUpdated,
 }: StudentsTableProps) => {
-  // Move sort state to this component
+  
   const [sortBy, setSortBy] = useState<"name" | "roll" | null>("roll");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [emailSendLoading, setEmailSendLoading] = useState(false);
@@ -50,7 +50,7 @@ const StudentsTable = ({
   const canEdit = !!FeatureRules.enableEditing;
   const canEmail = !!FeatureRules.enableEmailSending;
 
-  // Move sort handler to this component
+  // Setting sort field and direction
   const handleSort = (field: "name" | "roll") => {
     if (sortBy === field) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -60,7 +60,7 @@ const StudentsTable = ({
     }
   };
 
-  // Move sorting logic to this component
+  // Sort students based on current sort state
   const sortedStudents = useMemo(() => {
     if (!sortBy) return filteredStudents;
     const sorted = [...filteredStudents];
@@ -85,7 +85,7 @@ const StudentsTable = ({
     return sorted;
   }, [filteredStudents, sortBy, sortDir]);
 
-  // Email sending logic moved from Body component
+  // Email sending logic with coupon generation
   const handleSendEmail = async (student: LocalStudent): Promise<void> => {
     if (!canEmail) {
       toast.error("Email sending is disabled", { richColors: true });
@@ -367,61 +367,63 @@ const StudentsTable = ({
               {(canEmail || canEdit) && (
                 <TableCell className="space-x-1">
                   <div className="flex space-x-2">
-                    {canEmail && (
-                      student.coupon_redeemed ? (
-                        <Badge size="sm" className="bg-purple-500 text-white flex items-center px-3 py-1">
-                          Redeemed
-                        </Badge>
-                      ) : (
-                        <Button
-                          className={`disabled:opacity-50 uppercase ${
-                            student.coupon_generated
-                              ? "bg-blue-400 hover:bg-blue-500"
-                              : "bg-green-400 hover:bg-green-500"
-                          }`}
-                          onClick={() => handleSendEmail(student)}
-                          disabled={
-                            student.payment_method === null || 
-                            emailSendLoading
-                          }
-                          title={
-                            student.payment_method === null
-                              ? "Payment not made"
-                              : student.coupon_generated
-                              ? "Resend Email"
-                              : "Send Email"
-                          }
-                        >
-                          <Mail className="h-4 w-4" />
-                          <span className="hidden sm:inline ml-2">
-                            {student.payment_method === null
-                              ? "Payment due"
-                              : student.coupon_generated
-                              ? "Resend Email"
-                              : "Send Email"}
-                          </span>
-                        </Button>
-                      )
-                    )}
-                    {canEdit && (
+                    {student.coupon_redeemed ? (
+                      <Badge size="sm" className="bg-purple-500 text-white flex items-center px-3 py-1">
+                        Redeemed
+                      </Badge>
+                    ) : (
                       <>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className={retroStyle}
-                          onClick={() => handleEditStudent?.(student)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          className="bg-destructive text-white hover:bg-destructive/90 border-black"
-                          onClick={() =>
-                            handleDeleteStudent?.(String(student.$id))
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canEmail && (
+                          <Button
+                            className={`disabled:opacity-50 uppercase ${
+                              student.coupon_generated
+                                ? "bg-blue-400 hover:bg-blue-500"
+                                : "bg-green-400 hover:bg-green-500"
+                            }`}
+                            onClick={() => handleSendEmail(student)}
+                            disabled={
+                              student.payment_method === null || 
+                              emailSendLoading
+                            }
+                            title={
+                              student.payment_method === null
+                                ? "Payment not made"
+                                : student.coupon_generated
+                                ? "Resend Email"
+                                : "Send Email"
+                            }
+                          >
+                            <Mail className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-2">
+                              {student.payment_method === null
+                                ? "Payment due"
+                                : student.coupon_generated
+                                ? "Resend Email"
+                                : "Send Email"}
+                            </span>
+                          </Button>
+                        )}
+                        {canEdit && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className={retroStyle}
+                              onClick={() => handleEditStudent?.(student)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              className="bg-destructive text-white hover:bg-destructive/90 border-black"
+                              onClick={() =>
+                                handleDeleteStudent?.(String(student.$id))
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </>
                     )}
                   </div>

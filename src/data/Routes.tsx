@@ -1,4 +1,5 @@
 import { ScanLine, Users, FileUp, LineChart } from "lucide-react";
+import FeatureRule from "@/data/Feature.Rules.json";
 
 const ROUTES = [
     {
@@ -47,8 +48,8 @@ const ROUTES = [
       icon: <ScanLine className="h-8 w-8" />,
       path: "/scan",
       bgColor: "bg-orange-200",
-      showInDashboard: true,
+      showInDashboard: FeatureRule.enableQrScan,
     },
-  ];;
+  ];
 
 export default ROUTES;

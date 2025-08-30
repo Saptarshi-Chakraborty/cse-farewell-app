@@ -122,7 +122,7 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
 
   return (
     <main id="main-content">
-      <section className="space-y-6">
+      <section className="space-y-6 mt-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
           <Text as="h2" className="text-center sm:text-left">
             {yearShortName} Year Students
