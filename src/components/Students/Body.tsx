@@ -9,11 +9,12 @@ import {
   databases,
   STUDENTS_COLLECTION_ID,
   Query,
+  client,
 } from "@/lib/appwrite";
 import { Student } from "@/lib/types";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { toast } from "sonner";
 import { Text } from "../retroui/Text";
 import StudentDialog from "./StudentDialog";
@@ -39,6 +40,7 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   const [loading, setLoading] = useState(false);
   
   const [query, setQuery] = useState("");
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // feature flags
   const canEdit = !!FeatureRules.enableEditing;
@@ -74,6 +76,138 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
     }
   }
 
+  // Set up Realtime subscription (patch local state using payload)
+  useEffect(() => {
+    // Clear any previous subscription
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+
+    const channels = [
+      // Generic channel covering all rows
+      "rows",
+      // Tables/rows (newer)
+      `databases.${DATABASE_ID}.tables.${STUDENTS_COLLECTION_ID}.rows`,
+      // Collections/documents (older)
+      `databases.${DATABASE_ID}.collections.${STUDENTS_COLLECTION_ID}.documents`,
+    ];
+
+    const isStudentsEvent = (events: string[]) => {
+      // Match either tables/rows or collections/documents forms for this collection
+      return events.some(
+        (e) =>
+          e.includes(
+            `databases.${DATABASE_ID}.tables.${STUDENTS_COLLECTION_ID}.rows.`
+          ) ||
+          e.includes(
+            `databases.${DATABASE_ID}.collections.${STUDENTS_COLLECTION_ID}.documents.`
+          )
+      );
+    };
+
+    const toLocalStudent = (p: any): LocalStudent => ({
+      $id: p.$id,
+      name: p.name,
+      roll: p.roll,
+      email: p.email,
+      year: p.year,
+      food_preference: p.food_preference,
+      payment_method: p.payment_method,
+      coupon_generated: Boolean(p.coupon_generated),
+      coupon_redeemed: Boolean(p.coupon_redeemed),
+    });
+
+    const unsubscribe = client.subscribe(channels, (response: any) => {
+      try {
+        const events: string[] = response?.events ?? [];
+        const payload = response?.payload as any;
+        if (!payload?.$id || !isStudentsEvent(events)) return;
+
+        // Guard: ensure same DB/collection
+        const isSameDb =
+          !payload?.$databaseId || payload.$databaseId === DATABASE_ID;
+        const isSameCollection =
+          !payload?.$tableId && !payload?.$collectionId
+            ? true
+            : payload.$tableId === STUDENTS_COLLECTION_ID ||
+              payload.$collectionId === STUDENTS_COLLECTION_ID;
+        if (!isSameDb || !isSameCollection) return;
+
+        const isCreate = events.some((e) => e.endsWith(".create"));
+        const isUpdate = events.some((e) => e.endsWith(".update"));
+        const isDelete = events.some((e) => e.endsWith(".delete"));
+
+        if (isCreate) {
+          // Add only if current year matches
+          if (payload.year === year) {
+            setStudents((prev) => {
+              if (prev.some((s) => s.$id === payload.$id)) return prev;
+              return [...prev, toLocalStudent(payload)];
+            });
+          }
+          return;
+        }
+
+        if (isUpdate) {
+          setStudents((prev) => {
+            const exists = prev.some((s) => s.$id === payload.$id);
+            // If moved to a different year, remove locally
+            if (exists && payload.year !== year) {
+              return prev.filter((s) => s.$id !== payload.$id);
+            }
+            // If belongs to current year:
+            if (payload.year === year) {
+              if (!exists) {
+                // New to this year due to year change
+                return [...prev, toLocalStudent(payload)];
+              }
+              // Merge update
+              return prev.map((s) =>
+                s.$id === payload.$id
+                  ? {
+                      ...s,
+                      name: payload.name,
+                      roll: payload.roll,
+                      email: payload.email,
+                      food_preference: payload.food_preference,
+                      payment_method: payload.payment_method,
+                      coupon_generated: Boolean(payload.coupon_generated),
+                      coupon_redeemed: Boolean(payload.coupon_redeemed),
+                    }
+                  : s
+              );
+            }
+            // Update not relevant to current year
+            return prev;
+          });
+          return;
+        }
+
+        if (isDelete) {
+          setStudents((prev) => prev.filter((s) => s.$id !== payload.$id));
+          return;
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    });
+
+    unsubscribeRef.current = unsubscribe;
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [year]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchStudents();
+  }, [year, router]);
+
   const handleAddStudent = () => {
     // if (!canEdit) return toast.error("Editing is disabled.");
     setSelectedStudent(null);
@@ -102,11 +236,6 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
       }
     }
   };
-
-  // Check authentication and fetch students
-  useEffect(() => {
-    fetchStudents();
-  }, [year, router]);
 
   // Keep the filtered list by query logic
   const filteredStudents = useMemo(() => {
