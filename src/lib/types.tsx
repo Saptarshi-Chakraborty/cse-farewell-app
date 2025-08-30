@@ -16,7 +16,8 @@ export type Student = {
   roll: string;
   food_preference: "veg" | "non-veg";
   payment_method: "online" | "offline" | "null" | null;
-  coupon_generated?: boolean;
+  coupon_generated?: boolean | null;
+  coupon_redeemed?: boolean | null;
 };
 
 export type StudentsPageBodyProps = {

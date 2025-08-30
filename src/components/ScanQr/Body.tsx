@@ -14,9 +14,13 @@ import {
   STUDENTS_COLLECTION_ID,
 } from "@/lib/appwrite";
 import { Badge } from "../retroui/Badge";
+import { toast } from "sonner";
 
 // add: extend scanned result to include year for display
-type LocalScannedStudent = ScannedStudent & { year?: string };
+type LocalScannedStudent = ScannedStudent & {
+  year?: string;
+  alreadyRedeemed?: boolean; // Track if the coupon was already redeemed
+};
 
 // add: normalize year to short form for display (matches Students page)
 function getYearShortName(year: string | number): string {
@@ -49,8 +53,8 @@ const ScanQrBody = () => {
   // new: auto-start camera after clearing result
   const [autoStartOnMount, setAutoStartOnMount] = useState(false);
 
-  // derived UI state: show result only while verifying or after success
-  const showResultBox = verifying || Boolean(scannedStudent);
+  // derived UI state: show result box when verifying, after success, or when there's an error
+  const showResultBox = verifying || Boolean(scannedStudent) || Boolean(errorMessage);
 
   const handleQrData = async (data: string) => {
     setQrData(data);
@@ -80,7 +84,9 @@ const ScanQrBody = () => {
         String(coupon.user_id) !== userId ||
         String(coupon.random_code) !== String(randomCode)
       ) {
-        setErrorMessage("QR data does not match any valid coupon.");
+        console.log("Coupon data mismatch:", { coupon, userId, randomCode });
+        setErrorMessage("Malformed QR data.");
+        setVerifying(false);
         return;
       }
 
@@ -102,14 +108,39 @@ const ScanQrBody = () => {
       // change: include normalized year for display so it always shows
       const yearShort = getYearShortName(student.year ?? "");
 
+      // Check if coupon was already redeemed
+      const alreadyRedeemed = Boolean(student.coupon_redeemed);
+      let status = "";
+
+      if (alreadyRedeemed) {
+        status = "Coupon already redeemed";
+      } else {
+        // Mark the coupon as redeemed in the database
+        try {
+          await databases.updateDocument(
+            DATABASE_ID,
+            STUDENTS_COLLECTION_ID,
+            userId,
+            { coupon_redeemed: true }
+          );
+          status = "Valid Coupon";
+        } catch (updateError) {
+          console.error("Failed to mark coupon as redeemed:", updateError);
+          status = "Valid coupon, but failed to mark as redeemed";
+          toast.error("Error updating redemption status", { richColors: true });
+        }
+      }
+
       setScannedStudent({
         name: String(student.name || ""),
         roll: String(student.roll || ""),
         year: yearShort,
         food,
-        status: "Valid coupon",
+        status,
+        alreadyRedeemed,
       });
     } catch (e) {
+      console.error("Error verifying QR:", e);
       setErrorMessage("Error verifying QR. Please try again.");
     } finally {
       setVerifying(false);
@@ -127,7 +158,7 @@ const ScanQrBody = () => {
 
         <Card className={`${retroStyle} p-6 block`}>
           <div className="flex flex-col items-center w-full">
-            {/* Scanner is hidden while verifying or after a successful scan */}
+            {/* Scanner is hidden while verifying, after a successful scan, or when there's an error */}
             {!showResultBox && (
               <div className="mb-4 w-full">
                 <Scanner
@@ -138,7 +169,7 @@ const ScanQrBody = () => {
               </div>
             )}
 
-            {/* Result box only during verifying or after success */}
+            {/* Result box for verifying, success, or error */}
             {showResultBox && (
               <div
                 className={`mt-2 p-4 min-w-[300px] bg-white text-center ${retroStyle}`}
@@ -176,12 +207,25 @@ const ScanQrBody = () => {
                     {scannedStudent.status && (
                       <Text
                         as="p"
-                        className="mt-2 text-md font-bold text-green-600"
+                        className={`mt-2 text-md font-bold ${
+                          scannedStudent.alreadyRedeemed
+                            ? "text-red-600 text-xl"
+                            : "text-green-600"
+                        }`}
                       >
                         {scannedStudent.status}
                       </Text>
                     )}
                   </>
+                ) : errorMessage ? (
+                  <div className="flex flex-col items-center py-4">
+                    <Text as="p" className="text-2xl font-bold text-red-600 mb-3">
+                      Error!
+                    </Text>
+                    <Text as="p" className="text-xl text-red-600">
+                      {errorMessage}
+                    </Text>
+                  </div>
                 ) : null}
 
                 <div className="mt-4 flex justify-center">
@@ -211,4 +255,3 @@ const ScanQrBody = () => {
 };
 
 export default ScanQrBody;
-                
