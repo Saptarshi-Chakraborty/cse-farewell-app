@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Coupon</title>
+  <style>
+    /* Mobile Responsive Overrides */
+    @media screen and (max-width: 600px) {
+      .main-container { width: 100% !important; padding: 10px !important; }
+      .brutal-card { width: 100% !important; box-shadow: 4px 4px 0px #000000 !important; }
+      .stack-mobile { display: block !important; width: 100% !important; margin-bottom: 15px !important; }
+      .hide-mobile { display: none !important; }
+      .qr-image { width: 100% !important; max-width: 250px !important; }
+      .title-text { font-size: 28px !important; }
+    }
+  </style>
+  <!--[if mso]>
+  <style>
+    .brutal-shadow { border: 3px solid #000000 !important; }
+    body, table, td, p, a, span { font-family: 'Courier New', Courier, monospace !important; }
+  </style>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f0; font-family: 'Courier New', Courier, monospace; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;">
+
+  <!-- Background Wrapper -->
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f4f4f0" style="background-color: #f4f4f0;">
+    <tr>
+      <td align="center" valign="top" class="main-container" style="padding: 40px 20px;">
+        
+        <!--[if mso]>
+        <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+        <tr><td align="center" valign="top">
+        <![endif]-->
+
+        <!-- Main Brutalist Card -->
+        <table width="100%" border="0" cellpadding="0" cellspacing="0" class="brutal-card brutal-shadow" style="max-width: 600px; background-color: #ffffff; border: 4px solid #000000; border-radius: 0px; box-shadow: 8px 8px 0px #000000;">
+          
+          <!-- Header Area -->
+          <tr>
+            <td align="center" style="background-color: #ffde59; border-bottom: 4px solid #000000; padding: 30px 20px;">
+              <h1 class="title-text" style="margin: 0; font-size: 36px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: 2px;">Food Coupon</h1>
+              <div style="margin-top: 10px; display: inline-block; background-color: #000000; color: #ffffff; padding: 5px 15px; font-weight: bold; font-size: 16px; letter-spacing: 1px;">SEMICOLON '26</div>
+            </td>
+          </tr>
+
+          <!-- Content Area -->
+          <tr>
+            <td style="padding: 30px 20px; text-align: left;">
+              
+              <h2 style="margin: 0 0 15px 0; font-size: 22px; font-weight: 800; color: #000000;">Hello, <?= name ?> 👋</h2>
+              
+              <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #000000; font-weight: 600; border: 3px solid #000000; background-color: #e0f7fa; padding: 15px; box-shadow: 4px 4px 0px #000000;">
+                This is your digital coupon for collecting your food packet at <strong>Semicolon '26</strong> – Farewell celebration of the CSE department.
+              </p>
+
+              <!-- QR Code Block -->
+              <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                <tr>
+                  <td align="center">
+                    <table border="0" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border: 4px solid #000000; padding: 15px; box-shadow: 6px 6px 0px #000000;">
+                      <tr>
+                        <td align="center">
+                          <!-- The src is connected to your apps script inline attachment -->
+                          <img class="qr-image" src="cid:qrImage" width="220" alt="QR Code" style="display: block; width: 220px; max-width: 100%; border: 2px solid #000000; height: auto;" />
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin: 20px 0 0 0; font-size: 14px; font-weight: bold; color: #555555; text-transform: uppercase;">Show at the food counter</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Data Grid Area -->
+              <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <!-- Year -->
+                  <td class="stack-mobile" width="31%" align="center" valign="top">
+                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #ff90e8; border: 3px solid #000000; box-shadow: 4px 4px 0px #000000;">
+                      <tr>
+                        <td align="center" style="padding: 15px 10px;">
+                          <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; color: #000000; margin-bottom: 5px;">Year</div>
+                          <div style="font-size: 18px; font-weight: 900; color: #000000;"><?= year ?></div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  
+                  <td class="hide-mobile" width="3%" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+
+                  <!-- Roll -->
+                  <td class="stack-mobile" width="31%" align="center" valign="top">
+                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #8cff9e; border: 3px solid #000000; box-shadow: 4px 4px 0px #000000;">
+                      <tr>
+                        <td align="center" style="padding: 15px 10px;">
+                          <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; color: #000000; margin-bottom: 5px;">Roll</div>
+                          <div style="font-size: 18px; font-weight: 900; color: #000000;"><?= roll ?></div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+
+                  <td class="hide-mobile" width="3%" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+
+                  <!-- Food Preference -->
+                  <td class="stack-mobile" width="31%" align="center" valign="top">
+                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #ffbc59; border: 3px solid #000000; box-shadow: 4px 4px 0px #000000;">
+                      <tr>
+                        <td align="center" style="padding: 15px 10px;">
+                          <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; color: #000000; margin-bottom: 5px;">Food</div>
+                          <div style="font-size: 18px; font-weight: 900; color: #000000;"><?= food ?></div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer Inside Card -->
+          <tr>
+            <td align="center" style="background-color: #000000; color: #ffffff; padding: 20px; border-top: 4px solid #000000;">
+              <p style="margin: 0; font-size: 14px; font-weight: 600;">For any issues related to the food coupon, contact your class CR.</p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Outside Disclaimer Footer -->
+        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; margin-top: 20px;">
+          <tr>
+            <td align="center" style="padding: 0 10px;">
+              <p style="margin: 0 0 10px 0; font-size: 12px; color: #666666; line-height: 1.5; font-weight: bold;">
+                This mail is sent to you because you have subscribed to the Farewell celebration program of CSE department of FIEM.
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #888888; font-weight: bold;">
+                This is an automated email. Don't reply to this mail.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+        <!--[if mso]>
+        </td></tr></table>
+        <![endif]-->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
