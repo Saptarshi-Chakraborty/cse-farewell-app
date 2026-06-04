@@ -1,13 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { BrowserMultiFormatReader, NotFoundException } from "@zxing/library";
 import AllVideoDevicesDropdown from "./AllVideoDevicesDropdown";
 import { toast } from "sonner";
 import { Button } from "../retroui/Button";
-// Import an icon for the placeholder
-// import { QrCodeIcon } from "@heroicons/react/24/outline";
 import { ScanQrCode as QrCodeIcon } from "lucide-react";
 import FlashLightButton from "./FlashLightButton";
-// import { retroStyle } from "@/lib/styles";
 
 type VideoState = {
   gotPermissions: boolean;
@@ -18,40 +15,20 @@ type VideoState = {
 
 type ScannerProps = {
   qrData: string | null;
-  // allow async handler
   setQrData: (value: string) => void | Promise<void>;
-  // new: auto start camera when true
   autoStart?: boolean;
 };
 
 const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false }) => {
-  // Use a stable ZXing reader instance across renders
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   if (!codeReaderRef.current) {
     codeReaderRef.current = new BrowserMultiFormatReader();
   }
-  // Guard to prevent callback work after stopping
+
   const isScanningRef = useRef(false);
+  const mountedRef = useRef(true);
 
-  // Track mount state to avoid setState after unmount
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  // Stable ref to the latest stopCamera for event handlers
-  const stopCameraRef = useRef<() => void>(() => {});
-  useEffect(() => {
-    stopCameraRef.current = stopCamera;
-  });
-
-  // State Variables
-  const [allVideoInputDevices, setAllVideoInputDevices] = useState<
-    MediaDeviceInfo[]
-  >([]);
+  const [allVideoInputDevices, setAllVideoInputDevices] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraId, setCurrentCameraId] = useState<string | null>(null);
   const [videoState, setVideoState] = useState<VideoState>({
     gotPermissions: false,
@@ -59,102 +36,58 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
     numberOfDevices: 0,
     errorMessage: null,
   });
-  const [qrCodeResult, setQrCodeResult] = useState<string | null>(null);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
 
-  // Reference variables
+  // Intent to have the camera running or not
+  const [isActive, setIsActive] = useState<boolean>(autoStart);
+
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
-  const outputBoxRef = useRef<HTMLParagraphElement | null>(null);
 
-  // ---- Functions ---- //
-  async function getAllAvailavleVideoInputs() {
-    if (!codeReaderRef.current) return;
-    const allDevices = await codeReaderRef.current.listVideoInputDevices();
-    // console.log(allDevices);
-
-    setAllVideoInputDevices(allDevices);
-
-    setVideoState((oldState) => {
-      return {
-        ...oldState,
-        numberOfDevices: allDevices.length,
-      };
-    });
-  }
-
-  function getVideoPermission() {
-    const constraints: MediaStreamConstraints = {
-      video: { facingMode: "environment" },
-      audio: false,
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
     };
+  }, []);
 
-    navigator.mediaDevices
-      .getUserMedia(constraints)
-      .then((_stream) => {
-        // Immediately stop the temp permission stream
-        _stream.getTracks().forEach((t) => t.stop());
+  const getAllAvailavleVideoInputs = useCallback(async () => {
+    if (!codeReaderRef.current) return;
+    try {
+      const allDevices = await codeReaderRef.current.listVideoInputDevices();
+      if (mountedRef.current) {
+        setAllVideoInputDevices(allDevices);
+        setVideoState((oldState) => ({
+          ...oldState,
+          numberOfDevices: allDevices.length,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to list video devices", err);
+    }
+  }, []);
 
-        console.log("Got camera permissions");
+  const getVideoPermission = useCallback(async () => {
+    try {
+      const constraints: MediaStreamConstraints = {
+        video: { facingMode: "environment" },
+        audio: false,
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      stream.getTracks().forEach((t) => t.stop());
+      
+      if (mountedRef.current) {
         setVideoState((prev) => ({ ...prev, gotPermissions: true }));
         getAllAvailavleVideoInputs();
-      })
-      .catch((err) => {
-        console.log(err);
-        toast.error("Error in getting camera permissions");
-      });
-  }
-
-  async function startCamera() {
-    console.log("Starting camera...");
-    console.log(`Camera ID: ${currentCameraId}`);
-
-    const videoElement = videoElementRef.current;
-    if (!videoElement) return;
-
-    try {
-      // Ensure previous session is fully stopped
-      stopCamera();
-
-      // Capture the stream that ZXing attaches to the video element
-      const onLoadedMetadata = () => {
-        const s = videoElement.srcObject as MediaStream | null;
-        setMediaStream(s || null);
-        setVideoState((prev) => ({ ...prev, cameraStarted: true }));
-      };
-      videoElement.onloadedmetadata = onLoadedMetadata;
-
-      isScanningRef.current = true;
-
-      // Let ZXing open and manage the MediaStream
-      codeReaderRef.current?.decodeFromVideoDevice(
-        currentCameraId ?? null,
-        videoElement,
-        (result, error) => {
-          if (!isScanningRef.current) return; // ignore callbacks after stop
-          console.log("Scanning for Qr Code...");
-          if (result) {
-            outputBoxRef.current &&
-              (outputBoxRef.current.innerText = result.toString());
-            setQrData(result.toString());
-            stopCamera();
-          }
-          if (error && !(error instanceof NotFoundException)) {
-            console.log("Error in QR Code Decoder");
-            console.log(error);
-          }
-        }
-      );
+      }
     } catch (err) {
       console.log(err);
-      toast.error("Error in starting camera");
+      toast.error("Camera permissions denied or unavailable.");
     }
-  }
+  }, [getAllAvailavleVideoInputs]);
 
-  function stopCamera() {
-    console.log("Stopping camera...");
+  const stopCamera = useCallback(() => {
     isScanningRef.current = false;
 
-    // Stop ZXing’s decoding and its internal stream
     try {
       (codeReaderRef.current as any)?.stopContinuousDecode?.();
       (codeReaderRef.current as any)?.stopAsyncDecode?.();
@@ -163,24 +96,14 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
       console.log("Error while stopping decoder", e);
     }
 
-    // Avoid state updates during unmount
     if (mountedRef.current) {
       setVideoState((prev) => ({ ...prev, cameraStarted: false }));
+      setMediaStream(null);
     }
 
     const videoElement = videoElementRef.current;
     if (videoElement) {
-      // Detach handlers
       videoElement.onloadedmetadata = null;
-      // Clear additional potential listeners defensively
-      videoElement.onloadeddata = null;
-      videoElement.oncanplay = null;
-      videoElement.onplay = null;
-      videoElement.onpause = null;
-      videoElement.onended = null;
-      videoElement.ontimeupdate = null;
-
-      // Hard-stop any remaining tracks attached to the video element
       const src = videoElement.srcObject as MediaStream | null;
       if (src) {
         src.getTracks().forEach((track: MediaStreamTrack) => {
@@ -191,42 +114,89 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
       }
       videoElement.pause();
       videoElement.srcObject = null;
-      // Remove any lingering src and force a load to fully detach
       try {
         videoElement.removeAttribute("src");
         videoElement.load();
       } catch {}
     }
+  }, []);
 
-    // Clear the media stream (used for flashlight) only if mounted
-    if (mountedRef.current) {
-      setMediaStream(null);
+  const startCamera = useCallback(() => {
+    const videoElement = videoElementRef.current;
+    if (!videoElement) return;
+
+    try {
+      stopCamera();
+
+      videoElement.onloadedmetadata = () => {
+        const s = videoElement.srcObject as MediaStream | null;
+        if (mountedRef.current) {
+          setMediaStream(s || null);
+          setVideoState((prev) => ({ ...prev, cameraStarted: true }));
+        }
+      };
+
+      isScanningRef.current = true;
+
+      codeReaderRef.current?.decodeFromVideoDevice(
+        currentCameraId ?? null,
+        videoElement,
+        (result, error) => {
+          if (!isScanningRef.current) return;
+          if (result) {
+            setQrData(result.toString());
+            // Intentionally set inactive to trigger stop
+            setIsActive(false);
+          }
+          if (error && !(error instanceof NotFoundException)) {
+            console.log("Error in QR Code Decoder", error);
+          }
+        }
+      );
+    } catch (err) {
+      console.log(err);
+      toast.error("Error in starting camera");
     }
-  }
+  }, [currentCameraId, setQrData, stopCamera]);
 
-  // ----- HOOCKs ----- //
-
-  // Auto-start camera when requested (used after Clear Result).
+  // Initial mount permission check
   useEffect(() => {
-    if (!autoStart) return;
-    if (videoState.cameraStarted) return;
-    if (videoState.gotPermissions) {
-      startCamera();
+    getVideoPermission();
+    return () => {
+      stopCamera();
+    };
+  }, [getVideoPermission, stopCamera]);
+
+  // Handle active state
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (isActive && videoState.gotPermissions) {
+      // Only start if we have a camera selected OR we know there are no devices
+      if (currentCameraId || videoState.numberOfDevices === 0) {
+        // Debounce camera start slightly to avoid rapid restarts when swapping cameras
+        timer = setTimeout(() => {
+          startCamera();
+        }, 100);
+      }
     } else {
-      // request permission; once granted, effect will run again and start camera
-      getVideoPermission();
+      stopCamera();
     }
-  }, [autoStart, videoState.gotPermissions, videoState.cameraStarted]);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isActive, videoState.gotPermissions, currentCameraId, videoState.numberOfDevices, startCamera, stopCamera]);
 
   // Global listeners to defensively stop camera on tab hide/leave
   useEffect(() => {
     const onVisibility = () => {
       if (document.hidden) {
-        stopCameraRef.current();
+        setIsActive(false);
       }
     };
-    const onPageHide = () => stopCameraRef.current();
-    const onBeforeUnload = () => stopCameraRef.current();
+    const onPageHide = () => setIsActive(false);
+    const onBeforeUnload = () => setIsActive(false);
 
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pagehide", onPageHide);
@@ -239,46 +209,9 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
     };
   }, []);
 
-  // when the document loads
-  useEffect(() => {
-    getVideoPermission();
-
-    const el = document.getElementById(
-      "videoElement"
-    ) as HTMLVideoElement | null;
-    console.log(`display : ${el?.style.height}`);
-
-    return () => {
-      // Only stop devices/decoders; do not set state during unmount
-      stopCamera();
-      setAllVideoInputDevices([]);
-      // setVideoState({
-      //   gotPermissions: false,
-      //   cameraStarted: false,
-      //   numberOfDevices: 0,
-      //   errorMessage: null,
-      // });
-    };
-  }, []);
-
-  // Add this useEffect to watch for camera changes
-  useEffect(() => {
-    // If camera is already running and the camera ID changes, restart the camera
-    if (videoState.cameraStarted && currentCameraId) {
-      stopCamera();
-      // Small delay to ensure previous camera is fully stopped
-      setTimeout(() => {
-        startCamera();
-      }, 300);
-    }
-  }, [currentCameraId]);
-
-  // ----- JSX ----- //
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
-      {/* Camera container with fixed dimensions - centered */}
       <div className="w-full md:w-2/3 max-w-md h-64 md:h-80 relative rounded border-2 border-dark mx-auto">
-        {/* Video element */}
         <video
           ref={videoElementRef}
           className="w-full h-full object-cover rounded"
@@ -287,21 +220,18 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
           }}
           id="videoElement"
           autoPlay
+          playsInline
+          muted
         />
 
-        {/* Placeholder when camera is not active */}
         {!videoState.cameraStarted && (
-          <div
-            className={`w-full h-full bg-gray-800 flex items-center justify-center`}
-          >
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
             <QrCodeIcon className="h-24 w-24 text-gray-500" />
           </div>
         )}
       </div>
 
-      {/* Controls - centered */}
       <div className="w-full md:w-1/3 flex flex-col items-center gap-4">
-        {/* All Video Inputs Dropdown */}
         <AllVideoDevicesDropdown
           videoState={videoState}
           allVideoDeviceObjects={allVideoInputDevices}
@@ -309,16 +239,13 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
           currentCameraId={currentCameraId}
         />
 
-        {/* Action Buttons */}
         <ActionButtons
           videoState={videoState}
           getCameraPermission={getVideoPermission}
-          startCameraFunction={startCamera}
-          stopCameraFunction={stopCamera}
+          startCameraFunction={() => setIsActive(true)}
+          stopCameraFunction={() => setIsActive(false)}
           mediaStream={mediaStream}
         />
-
-        <p className="text-wrap d-none" ref={outputBoxRef} id="outputBox"></p>
       </div>
     </div>
   );
@@ -327,7 +254,7 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
 type ActionButtonsProps = {
   videoState: VideoState;
   getCameraPermission: () => void;
-  startCameraFunction: () => void | Promise<void>;
+  startCameraFunction: () => void;
   stopCameraFunction: () => void;
   mediaStream: MediaStream | null;
 };
@@ -341,13 +268,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
 }) => {
   return (
     <>
-      {videoState.gotPermissions === false ? (
-        <Button onClick={getCameraPermission} className="">
-          Get Permissions
-        </Button>
+      {!videoState.gotPermissions ? (
+        <Button onClick={getCameraPermission}>Get Permissions</Button>
       ) : (
         <div className="flex items-center gap-2">
-          {videoState.cameraStarted === false ? (
+          {!videoState.cameraStarted ? (
             <Button
               onClick={startCameraFunction}
               className="bg-green-400 hover:bg-green-500"
