@@ -33,4 +33,4 @@ function ScanQrPage() {
   );
 }
 
-export default withAuth(ScanQrPage, { role: ROLES.ADMIN });
+export default withAuth(ScanQrPage, { role: [ROLES.ADMIN, ROLES.ORGANIZER] });

@@ -26,4 +26,4 @@ const FourthYearStudents = () => {
   );
 };
 
-export default withAuth(FourthYearStudents, { role: ROLES.ADMIN });
+export default withAuth(FourthYearStudents, { role: [ROLES.ADMIN, ROLES.ORGANIZER] });
