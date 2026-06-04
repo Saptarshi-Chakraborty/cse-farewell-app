@@ -11,11 +11,13 @@ import FeatureRules from "@/data/Feature.Rules.json";
 import { DATABASE_ID, databases, FOOD_COUPON_COLLECTION_ID, ID, Query, STUDENTS_COLLECTION_ID } from "@/lib/appwrite";
 import { retroStyle } from "@/lib/styles";
 import { Student } from "@/lib/types";
-import { Mail, Pencil, Trash2 } from "lucide-react";
+import { Mail, Pencil, Trash2, Undo2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "../retroui/Badge";
 import { getYearShortName } from "./Body";
+import { ROLES, useGlobalContext } from "@/context/GlobalContext";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "@/components/retroui/Dialog";
 
 
 // Extended Student type with coupon_generated field
@@ -45,6 +47,9 @@ const StudentsTable = ({
   const [sortBy, setSortBy] = useState<"name" | "roll" | null>("roll");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [emailSendLoading, setEmailSendLoading] = useState(false);
+
+  const { user } = useGlobalContext();
+  const isAdmin = user?.labels?.includes(ROLES.ADMIN);
 
   // feature flags
   const canEdit = !!FeatureRules.enableEditing;
@@ -84,6 +89,28 @@ const StudentsTable = ({
     });
     return sorted;
   }, [filteredStudents, sortBy, sortDir]);
+
+  const [studentToUnredeem, setStudentToUnredeem] = useState<LocalStudent | null>(null);
+
+  const confirmUnredeem = async () => {
+    if (!isAdmin || !studentToUnredeem) return;
+
+    try {
+      await databases.updateDocument(
+        DATABASE_ID,
+        STUDENTS_COLLECTION_ID,
+        studentToUnredeem.$id as string,
+        { coupon_redeemed: false }
+      );
+      toast.success("Student unredeemed successfully");
+      onStudentUpdated();
+    } catch (error) {
+      console.error("Error unredeeming student:", error);
+      toast.error("Failed to unredeem student.");
+    } finally {
+      setStudentToUnredeem(null);
+    }
+  };
 
   // Email sending logic with coupon generation
   const handleSendEmail = async (student: LocalStudent): Promise<void> => {
@@ -268,172 +295,204 @@ const StudentsTable = ({
   }
 
   return (
-    <Table className="min-w-[720px]" aria-busy={loading}>
-      <TableHeader>
-        <TableRow>
-          {/* Roll */}
-          <TableHead className="text-lg text-black">
-            <button
-              type="button"
-              className="flex items-center gap-1 cursor-pointer"
-              onClick={() => handleSort("roll")}
-              title="Sort by Roll No."
-            >
-              Roll
-              {sortBy === "roll" ? (sortDir === "asc" ? " ▲" : " ▼") : null}
-            </button>
-          </TableHead>
-
-          {/* Student Name */}
-          <TableHead className="text-lg text-black">
-            <button
-              type="button"
-              className="flex items-center gap-1 cursor-pointer"
-              onClick={() => handleSort("name")}
-              title="Sort by Name"
-            >
-              Name
-              {sortBy === "name" ? (sortDir === "asc" ? " ▲" : " ▼") : null}
-            </button>
-          </TableHead>
-
-          <TableHead className="text-lg text-black">Email</TableHead>
-          <TableHead className="text-lg text-black">Food Pref.</TableHead>
-          <TableHead className="text-lg text-black">Payment</TableHead>
-          {(canEmail || canEdit) && (
-            <TableHead className="text-lg text-black">Actions</TableHead>
-          )}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {loading ? (
+    <>
+      <Table className="min-w-[720px]" aria-busy={loading}>
+        <TableHeader>
           <TableRow>
+            {/* Roll */}
+            <TableHead className="text-lg text-black">
+              <button
+                type="button"
+                className="flex items-center gap-1 cursor-pointer"
+                onClick={() => handleSort("roll")}
+                title="Sort by Roll No."
+              >
+                Roll
+                {sortBy === "roll" ? (sortDir === "asc" ? " ▲" : " ▼") : null}
+              </button>
+            </TableHead>
 
-            <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-              <div className="flex items-center justify-center gap-2">
-                <svg
-                  className="h-5 w-5 animate-spin"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M12 2a10 10 0 0 1 10 10h-4A6 6 0 0 0 12 6V2z"
-                  />
-                </svg>
-                <span>Loading students...</span>
-              </div>
-            </TableCell>
+            {/* Student Name */}
+            <TableHead className="text-lg text-black">
+              <button
+                type="button"
+                className="flex items-center gap-1 cursor-pointer"
+                onClick={() => handleSort("name")}
+                title="Sort by Name"
+              >
+                Name
+                {sortBy === "name" ? (sortDir === "asc" ? " ▲" : " ▼") : null}
+              </button>
+            </TableHead>
+
+            <TableHead className="text-lg text-black">Email</TableHead>
+            <TableHead className="text-lg text-black">Food Pref.</TableHead>
+            <TableHead className="text-lg text-black">Payment</TableHead>
+            {(canEmail || canEdit) && (
+              <TableHead className="text-lg text-black">Actions</TableHead>
+            )}
           </TableRow>
-        ) : sortedStudents.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-              {query
-                ? "No matching students found."
-                : "No students found. Add some students to see them here."}
-            </TableCell>
-          </TableRow>
-        ) : (
-          sortedStudents.map((student, i) => (
-            <TableRow key={student.$id}>
-              <TableCell className="text-base">{student.roll}</TableCell>
-              <TableCell className="text-base">{student.name}</TableCell>
-              <TableCell className="text-base">{student.email}</TableCell>
-              <TableCell className="text-base">
-                {student.food_preference === "veg" ? (
-                  <Badge size="sm" className="bg-green-500 text-black">
-                    Veg
-                  </Badge>
-                ) : student.food_preference === "non-veg" ? (
-                  <Badge size="sm" className="bg-red-500 text-white">
-                    Non&nbsp;Veg
-                  </Badge>
-                ) : (
-                  <Badge className="bg-gray-500">N/A</Badge>
-                )}
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableRow>
+
+              <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                <div className="flex items-center justify-center gap-2">
+                  <svg
+                    className="h-5 w-5 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M12 2a10 10 0 0 1 10 10h-4A6 6 0 0 0 12 6V2z"
+                    />
+                  </svg>
+                  <span>Loading students...</span>
+                </div>
               </TableCell>
-              <TableCell className="text-base">
-                {student.payment_method || "N/A"}
+            </TableRow>
+          ) : sortedStudents.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                {query
+                  ? "No matching students found."
+                  : "No students found. Add some students to see them here."}
               </TableCell>
-              {(canEmail || canEdit) && (
-                <TableCell className="space-x-1">
-                  <div className="flex space-x-2">
-                    {student.coupon_redeemed ? (
-                      <Badge size="sm" className="bg-purple-500 text-white flex items-center px-3 py-1">
-                        Redeemed
-                      </Badge>
-                    ) : (
-                      <>
-                        {canEmail && (
-                          <Button
-                            className={`disabled:opacity-50 uppercase ${
-                              student.coupon_generated
-                                ? "bg-blue-400 hover:bg-blue-500"
-                                : "bg-green-400 hover:bg-green-500"
-                            }`}
-                            onClick={() => handleSendEmail(student)}
-                            disabled={
-                              student.payment_method === null || 
-                              emailSendLoading
-                            }
-                            title={
-                              student.payment_method === null
-                                ? "Payment not made"
-                                : student.coupon_generated
-                                ? "Resend Email"
-                                : "Send Email"
-                            }
-                          >
-                            <Mail className="h-4 w-4" />
-                            <span className="hidden sm:inline ml-2">
-                              {student.payment_method === null
-                                ? "Payment due"
-                                : student.coupon_generated
-                                ? "Resend Email"
-                                : "Send Email"}
-                            </span>
-                          </Button>
-                        )}
-                        {canEdit && (
-                          <>
+            </TableRow>
+          ) : (
+            sortedStudents.map((student, i) => (
+              <TableRow key={student.$id}>
+                <TableCell className="text-base">{student.roll}</TableCell>
+                <TableCell className="text-base">{student.name}</TableCell>
+                <TableCell className="text-base">{student.email}</TableCell>
+                <TableCell className="text-base">
+                  {student.food_preference === "veg" ? (
+                    <Badge size="sm" className="bg-green-500 text-black">
+                      Veg
+                    </Badge>
+                  ) : student.food_preference === "non-veg" ? (
+                    <Badge size="sm" className="bg-red-500 text-white">
+                      Non&nbsp;Veg
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-gray-500">N/A</Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-base">
+                  {student.payment_method || "N/A"}
+                </TableCell>
+                {(canEmail || canEdit) && (
+                  <TableCell className="space-x-1">
+                    <div className="flex space-x-2">
+                      {student.coupon_redeemed ? (
+                        <>
+                          <Badge size="sm" className="bg-purple-500 text-white flex items-center px-3 py-1">
+                            Redeemed
+                          </Badge>
+                          {isAdmin && (
                             <Button
-                              variant="outline"
-                              size="icon"
-                              className={retroStyle}
-                              onClick={() => handleEditStudent?.(student)}
+                              size="sm"
+                              className="bg-orange-500 hover:bg-orange-600 text-white uppercase h-auto py-1"
+                              onClick={() => setStudentToUnredeem(student)}
+                              title="Unredeem"
                             >
-                              <Pencil className="h-4 w-4" />
+                              <Undo2 className="h-4 w-4" />
+                              <span className="hidden sm:inline ml-2">Unredeem</span>
                             </Button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {canEmail && (
                             <Button
-                              size="icon"
-                              className="bg-destructive text-white hover:bg-destructive/90 border-black"
-                              onClick={() =>
-                                handleDeleteStudent?.(String(student.$id))
+                              className={`disabled:opacity-50 uppercase ${
+                                student.coupon_generated
+                                  ? "bg-blue-400 hover:bg-blue-500"
+                                  : "bg-green-400 hover:bg-green-500"
+                              }`}
+                              onClick={() => handleSendEmail(student)}
+                              disabled={
+                                student.payment_method === null || 
+                                emailSendLoading
+                              }
+                              title={
+                                student.payment_method === null
+                                  ? "Payment not made"
+                                  : student.coupon_generated
+                                  ? "Resend Email"
+                                  : "Send Email"
                               }
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Mail className="h-4 w-4" />
+                              <span className="hidden sm:inline ml-2">
+                                {student.payment_method === null
+                                  ? "Payment due"
+                                  : student.coupon_generated
+                                  ? "Resend Email"
+                                  : "Send Email"}
+                              </span>
                             </Button>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              )}
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+                          )}
+                          {canEdit && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className={retroStyle}
+                                onClick={() => handleEditStudent?.(student)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                className="bg-destructive text-white hover:bg-destructive/90 border-black"
+                                onClick={() =>
+                                  handleDeleteStudent?.(String(student.$id))
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+      
+      {isAdmin && (
+        <Dialog open={!!studentToUnredeem} onOpenChange={(open) => !open && setStudentToUnredeem(null)}>
+          <DialogContent className={retroStyle}>
+            <DialogHeader className="bg-[#FDF6E3]">
+              <h2 className="text-xl font-bold">Confirm Unredeem</h2>
+            </DialogHeader>
+            <div className="p-6 bg-[#FDF6E3]">
+              <p className="text-lg">Are you sure you want to unredeem the coupon for <strong>{studentToUnredeem?.name}</strong>?</p>
+            </div>
+            <DialogFooter className="bg-[#FDF6E3]">
+              <Button variant="outline" className={`${retroStyle} uppercase`} onClick={() => setStudentToUnredeem(null)}>Cancel</Button>
+              <Button className={`${retroStyle} uppercase bg-orange-500 hover:bg-orange-600 text-white`} onClick={confirmUnredeem}>Confirm</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };
 
