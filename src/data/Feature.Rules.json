@@ -1,13 +1,13 @@
 {
-  "appName": "Semicolon '25",
+  "appName": "Semicolon '26",
   "appShortDescription": "CSE Department Farewell, FIEM",
   "enableEditing": true,
   "enableEmailSending" : true,
   "enableQrScan" :true,
   "enableBulkUpload" : true,
   "metaTags": {
-    "title": "SEMICOLON '25 - CSE Department Farewell",
-    "description": "Join us for SEMICOLON '25 - The CSE Department Farewell celebration at Future Institute of Engineering and Management.",
+    "title": "SEMICOLON '26 - CSE Department Farewell",
+    "description": "Join us for SEMICOLON '26 - The CSE Department Farewell celebration at Future Institute of Engineering and Management.",
     "urlImage": "/poster.jpg",
     "url": "https://cse-farewell.vercel.app",
     "keywords": [

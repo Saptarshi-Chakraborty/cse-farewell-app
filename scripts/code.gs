@@ -136,3 +136,10 @@ function testProcessCouponEmail() {
     console.error("Test execution failed:", err);
   }
 }
+
+function base64toBlob(base64Data) {
+  const contentType = "image/png";
+  const base64 = base64Data.split(',')[1] || base64Data;
+  const byteCharacters = Utilities.base64Decode(base64);
+  return Utilities.newBlob(byteCharacters, contentType, "qrCode.png");
+}
