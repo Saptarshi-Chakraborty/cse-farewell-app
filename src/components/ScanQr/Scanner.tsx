@@ -19,6 +19,13 @@ type ScannerProps = {
   autoStart?: boolean;
 };
 
+// --- GLOBAL CACHE ---
+// Keeps camera settings in memory across unmounts for faster "Scan Again"
+let globalCachedPermissions = false;
+let globalCachedDevices: MediaDeviceInfo[] = [];
+let globalCachedCameraId: string | null = null;
+// --------------------
+
 const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false }) => {
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   if (!codeReaderRef.current) {
@@ -28,15 +35,22 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
   const isScanningRef = useRef(false);
   const mountedRef = useRef(true);
 
-  const [allVideoInputDevices, setAllVideoInputDevices] = useState<MediaDeviceInfo[]>([]);
-  const [currentCameraId, setCurrentCameraId] = useState<string | null>(null);
+  const [allVideoInputDevices, setAllVideoInputDevices] = useState<MediaDeviceInfo[]>(globalCachedDevices);
+  const [currentCameraId, setCurrentCameraId] = useState<string | null>(globalCachedCameraId);
   const [videoState, setVideoState] = useState<VideoState>({
-    gotPermissions: false,
+    gotPermissions: globalCachedPermissions,
     cameraStarted: false,
-    numberOfDevices: 0,
+    numberOfDevices: globalCachedDevices.length,
     errorMessage: null,
   });
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+
+  // Sync state to cache when it changes
+  useEffect(() => {
+    globalCachedPermissions = videoState.gotPermissions;
+    globalCachedDevices = allVideoInputDevices;
+    globalCachedCameraId = currentCameraId;
+  }, [videoState.gotPermissions, allVideoInputDevices, currentCameraId]);
 
   // Intent to have the camera running or not
   const [isActive, setIsActive] = useState<boolean>(autoStart);
@@ -161,7 +175,9 @@ const Scanner: React.FC<ScannerProps> = ({ qrData, setQrData, autoStart = false 
 
   // Initial mount permission check
   useEffect(() => {
-    getVideoPermission();
+    if (!globalCachedPermissions) {
+      getVideoPermission();
+    }
     return () => {
       stopCamera();
     };
