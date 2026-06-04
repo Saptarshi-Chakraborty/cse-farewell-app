@@ -30,12 +30,13 @@ const ROUTES = [
       bgColor: "bg-red-200",
       showInDashboard: true,
     },
-    // {
-    //   title: "Statistics",
-    //   icon: <LineChart className="h-8 w-8" />,
-    //   path: "/stats",
-    //   bgColor: "bg-purple-200",
-    // },
+    {
+      title: "Statistics",
+      icon: <LineChart className="h-8 w-8" />,
+      path: "/stats",
+      bgColor: "bg-purple-200",
+      showInDashboard: true,
+    },
     {
       title: "Bulk Upload",
       icon: <FileUp className="h-8 w-8" />,
