@@ -8,6 +8,8 @@ import {
   Utensils,
   Beef,
   Activity,
+  Ticket,
+  QrCode,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -140,26 +142,65 @@ function StatsPage() {
     };
   }, [isRealtime]);
 
+  let paidStudents = 0;
+  let vegCount = 0;
+  let nonVegCount = 0;
+  let onlineCount = 0;
+  let offlineCount = 0;
+  let year1Count = 0;
+  let year2Count = 0;
+  let year3Count = 0;
+  let year4Count = 0;
+  let couponsGenerated = 0;
+  let couponsRedeemed = 0;
+
+  students.forEach((s) => {
+    // Payment method
+    if (s.payment_method && s.payment_method !== "null") {
+      paidStudents++;
+      if (s.payment_method === "online") {
+        onlineCount++;
+      } else if (s.payment_method === "offline") {
+        offlineCount++;
+      }
+    }
+    
+    // Food preference
+    if (s.food_preference === "veg") {
+      vegCount++;
+    } else if (s.food_preference === "non-veg") {
+      nonVegCount++;
+    }
+
+    // Year-wise stats
+    const yearStr = String(s.year || "").trim();
+    if (yearStr === "1") {
+      year1Count++;
+    } else if (yearStr === "2") {
+      year2Count++;
+    } else if (yearStr === "3") {
+      year3Count++;
+    } else if (yearStr === "4") {
+      year4Count++;
+    }
+
+    // Coupon stats
+    if (s.coupon_generated) {
+      couponsGenerated++;
+    }
+    if (s.coupon_redeemed) {
+      couponsRedeemed++;
+    }
+  });
+
   const totalStudents = students.length;
-  const paidStudents = students.filter(
-    (s) => s.payment_method && s.payment_method !== "null"
-  ).length;
-  const vegCount = students.filter((s) => s.food_preference === "veg").length;
-  const nonVegCount = students.filter((s) => s.food_preference === "non-veg").length;
-  
-  const onlineCount = students.filter((s) => s.payment_method === "online").length;
-  const offlineCount = students.filter((s) => s.payment_method === "offline").length;
   const totalPaidCount = onlineCount + offlineCount;
   
   const onlinePercent = totalPaidCount ? Math.round((onlineCount / totalPaidCount) * 100) : 0;
   const offlinePercent = totalPaidCount ? Math.round((offlineCount / totalPaidCount) * 100) : 0;
-
-  // Year-wise stats
-  const year1Count = students.filter((s) => String(s.year).trim() === "1").length;
-  const year2Count = students.filter((s) => String(s.year).trim() === "2").length;
-  const year3Count = students.filter((s) => String(s.year).trim() === "3").length;
-  const year4Count = students.filter((s) => String(s.year).trim() === "4").length;
   
+  const couponRedeemPercent = couponsGenerated ? Math.round((couponsRedeemed / couponsGenerated) * 100) : 0;
+
   const yearData = [
     { year: "1st Year", students: year1Count },
     { year: "2nd Year", students: year2Count },
@@ -203,7 +244,7 @@ function StatsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className={retroStyle}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-xl">Total Students</CardTitle>
@@ -250,9 +291,33 @@ function StatsPage() {
                   </p>
                 </CardContent>
               </Card>
+              <Card className={retroStyle}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xl">Coupons Gen.</CardTitle>
+                  <Ticket className="h-6 w-6 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold">{couponsGenerated}</div>
+                  <p className="text-sm text-gray-600">
+                    {totalStudents ? Math.round((couponsGenerated / totalStudents) * 100) : 0}% of total
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className={retroStyle}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xl">Coupons Red.</CardTitle>
+                  <QrCode className="h-6 w-6 text-pink-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold">{couponsRedeemed}</div>
+                  <p className="text-sm text-gray-600">
+                    {couponsGenerated ? Math.round((couponsRedeemed / couponsGenerated) * 100) : 0}% of gen.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className={retroStyle}>
                 <CardHeader>
                   <CardTitle className="text-2xl">Payment Mode Breakdown</CardTitle>
@@ -303,6 +368,36 @@ function StatsPage() {
                      fillColors={["#a78bfa"]} 
                      strokeColors={["#000000"]}
                    />
+                </CardContent>
+              </Card>
+
+              <Card className={retroStyle}>
+                <CardHeader>
+                  <CardTitle className="text-2xl">Coupon Redemption Detail</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-1 text-base">
+                      <span>Redeemed Coupons</span>
+                      <span>{couponsRedeemed} / {couponsGenerated}</span>
+                    </div>
+                    <Progress value={couponRedeemPercent} className="h-6 border-2 border-black [&>div]:bg-purple-400" />
+                    <div className="text-right font-bold">{couponRedeemPercent}% Redeemed</div>
+                  </div>
+                  <div className="pt-4 border-t-2 border-dashed border-gray-300 space-y-2 text-sm text-gray-700">
+                    <div className="flex justify-between">
+                      <span>Unredeemed Coupons:</span>
+                      <span className="font-semibold">{couponsGenerated - couponsRedeemed}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total Registered:</span>
+                      <span className="font-semibold">{totalStudents}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Coupons Not Yet Generated:</span>
+                      <span className="font-semibold">{totalStudents - couponsGenerated}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
