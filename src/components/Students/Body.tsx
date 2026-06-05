@@ -20,6 +20,7 @@ import { Text } from "../retroui/Text";
 import StudentDialog from "./StudentDialog";
 import StudentsStats from "./StudentsStats";
 import StudentsTable from "./StudentsTable";
+import { useGlobalContext, ROLES } from "@/context/GlobalContext";
 
 type StudentsPageBodyProps = {
   year: string;
@@ -42,8 +43,11 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
   const [query, setQuery] = useState("");
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
+  const { user } = useGlobalContext();
+  const isAdmin = user?.labels?.includes(ROLES.ADMIN);
+
   // feature flags
-  const canEdit = !!FeatureRules.enableEditing;
+  const canEdit = !!FeatureRules.enableEditing && isAdmin;
 
   const yearShortName = getYearShortName(year);
 
@@ -288,14 +292,16 @@ const StudentsPageBody = ({ year }: StudentsPageBodyProps) => {
               </span>
             </Button>
 
-            <Button
-              className={`uppercase bg-green-400 hover:bg-green-500`}
-              onClick={handleAddStudent}
-              disabled={loading}
-            >
-              <PlusCircle className="h-5 w-5" />
-              <span className="hidden sm:inline ml-2">Add Student</span>
-            </Button>
+            {canEdit && (
+              <Button
+                className={`uppercase bg-green-400 hover:bg-green-500`}
+                onClick={handleAddStudent}
+                disabled={loading}
+              >
+                <PlusCircle className="h-5 w-5" />
+                <span className="hidden sm:inline ml-2">Add Student</span>
+              </Button>
+            )}
           </div>
         </div>
 

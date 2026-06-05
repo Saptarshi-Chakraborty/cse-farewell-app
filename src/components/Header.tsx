@@ -40,6 +40,8 @@ export default function Header() {
   };
 
   const isAdmin = user?.labels?.includes("admin");
+  const isOrganizer = user?.labels?.includes("organizer");
+  const showNav = isAdmin || isOrganizer;
 
   return (
     <header className="relative">
@@ -53,8 +55,8 @@ export default function Header() {
         {user ? (
           <>
             <div className="hidden md:flex items-center space-x-4">
-              {/* Desktop Navigation for Admins */}
-              {isAdmin && (
+              {/* Desktop Navigation for Admins and Organizers */}
+              {showNav && (
                 <nav className="flex space-x-2">
                   <Button
                     variant={activePage === "dashboard" ? "default" : "outline"}
@@ -116,7 +118,7 @@ export default function Header() {
               } md:hidden z-50 p-4`}
             >
               <div className="flex flex-col space-y-4">
-                {isAdmin && (
+                {showNav && (
                   <>
                     <Button
                       variant={

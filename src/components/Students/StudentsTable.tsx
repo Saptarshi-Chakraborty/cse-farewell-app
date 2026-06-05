@@ -50,10 +50,13 @@ const StudentsTable = ({
 
   const { user } = useGlobalContext();
   const isAdmin = user?.labels?.includes(ROLES.ADMIN);
+  const isOrganizer = user?.labels?.includes(ROLES.ORGANIZER);
 
   // feature flags
-  const canEdit = !!FeatureRules.enableEditing;
-  const canEmail = !!FeatureRules.enableEmailSending;
+  const canEdit = !!FeatureRules.enableEditing && isAdmin;
+  const canEmail = !!FeatureRules.enableEmailSending && isAdmin;
+
+  const showActionsColumn = canEdit || canEmail || isOrganizer;
 
   // Setting sort field and direction
   const handleSort = (field: "name" | "roll") => {
@@ -328,8 +331,10 @@ const StudentsTable = ({
             <TableHead className="text-lg text-black">Email</TableHead>
             <TableHead className="text-lg text-black">Food Pref.</TableHead>
             <TableHead className="text-lg text-black">Payment</TableHead>
-            {(canEmail || canEdit) && (
-              <TableHead className="text-lg text-black">Actions</TableHead>
+            {showActionsColumn && (
+              <TableHead className="text-lg text-black">
+                {isAdmin ? "Actions" : "Coupon Status"}
+              </TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -392,15 +397,15 @@ const StudentsTable = ({
                 <TableCell className="text-base">
                   {student.payment_method || "N/A"}
                 </TableCell>
-                {(canEmail || canEdit) && (
+                {showActionsColumn && (
                   <TableCell className="space-x-1">
                     <div className="flex space-x-2">
-                      {student.coupon_redeemed ? (
-                        <>
-                          <Badge size="sm" className="bg-purple-500 text-white flex items-center px-3 py-1">
-                            Redeemed
-                          </Badge>
-                          {isAdmin && (
+                      {isAdmin ? (
+                        student.coupon_redeemed ? (
+                          <>
+                            <Badge size="sm" className="bg-purple-500 text-white flex items-center px-3 py-1">
+                              Redeemed
+                            </Badge>
                             <Button
                               size="sm"
                               className="bg-orange-500 hover:bg-orange-600 text-white uppercase h-auto py-1"
@@ -410,62 +415,77 @@ const StudentsTable = ({
                               <Undo2 className="h-4 w-4" />
                               <span className="hidden sm:inline ml-2">Unredeem</span>
                             </Button>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          {canEmail && (
-                            <Button
-                              className={`disabled:opacity-50 uppercase ${
-                                student.coupon_generated
-                                  ? "bg-blue-400 hover:bg-blue-500"
-                                  : "bg-green-400 hover:bg-green-500"
-                              }`}
-                              onClick={() => handleSendEmail(student)}
-                              disabled={
-                                student.payment_method === null || 
-                                emailSendLoading
-                              }
-                              title={
-                                student.payment_method === null
-                                  ? "Payment not made"
-                                  : student.coupon_generated
-                                  ? "Resend Email"
-                                  : "Send Email"
-                              }
-                            >
-                              <Mail className="h-4 w-4" />
-                              <span className="hidden sm:inline ml-2">
-                                {student.payment_method === null
-                                  ? "Payment due"
-                                  : student.coupon_generated
-                                  ? "Resend Email"
-                                  : "Send Email"}
-                              </span>
-                            </Button>
-                          )}
-                          {canEdit && (
-                            <>
+                          </>
+                        ) : (
+                          <>
+                            {canEmail && (
                               <Button
-                                variant="outline"
-                                size="icon"
-                                className={retroStyle}
-                                onClick={() => handleEditStudent?.(student)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                className="bg-destructive text-white hover:bg-destructive/90 border-black"
-                                onClick={() =>
-                                  handleDeleteStudent?.(String(student.$id))
+                                className={`disabled:opacity-50 uppercase ${
+                                  student.coupon_generated
+                                    ? "bg-blue-400 hover:bg-blue-500"
+                                    : "bg-green-400 hover:bg-green-500"
+                                }`}
+                                onClick={() => handleSendEmail(student)}
+                                disabled={
+                                  student.payment_method === null || 
+                                  emailSendLoading
+                                }
+                                title={
+                                  student.payment_method === null
+                                    ? "Payment not made"
+                                    : student.coupon_generated
+                                    ? "Resend Email"
+                                    : "Send Email"
                                 }
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Mail className="h-4 w-4" />
+                                <span className="hidden sm:inline ml-2">
+                                  {student.payment_method === null
+                                    ? "Payment due"
+                                    : student.coupon_generated
+                                    ? "Resend Email"
+                                    : "Send Email"}
+                                </span>
                               </Button>
-                            </>
-                          )}
-                        </>
+                            )}
+                            {canEdit && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className={retroStyle}
+                                  onClick={() => handleEditStudent?.(student)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  className="bg-destructive text-white hover:bg-destructive/90 border-black"
+                                  onClick={() =>
+                                    handleDeleteStudent?.(String(student.$id))
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </>
+                        )
+                      ) : (
+                        // Organizer (Read-Only Status display)
+                        student.coupon_redeemed ? (
+                          <Badge size="sm" className="bg-purple-500 text-white flex items-center px-3 py-1">
+                            Redeemed
+                          </Badge>
+                        ) : student.coupon_generated ? (
+                          <Badge size="sm" className="bg-blue-500 text-white flex items-center px-3 py-1">
+                            Active (Sent)
+                          </Badge>
+                        ) : (
+                          <Badge size="sm" className="bg-gray-400 text-white flex items-center px-3 py-1">
+                            Not Sent
+                          </Badge>
+                        )
                       )}
                     </div>
                   </TableCell>

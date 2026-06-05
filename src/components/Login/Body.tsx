@@ -70,9 +70,9 @@ const LoginPageBody = () => {
       const currentUser = await account.get();
       setUser(currentUser);
 
-      // Check for admin label
+      // Check for admin or organizer label
       const userLabels = currentUser.labels || [];
-      if (userLabels.includes("admin")) {
+      if (userLabels.includes("admin") || userLabels.includes("organizer")) {
         router.push("/dashboard");
       } else {
         router.push("/profile");

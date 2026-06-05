@@ -5,14 +5,24 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { Card } from "@/components/retroui/Card";
 import { Text } from "@/components/retroui/Text";
-import { ROLES } from "@/context/GlobalContext";
+import { useGlobalContext, ROLES } from "@/context/GlobalContext";
 import FeatureRule from "@/data/Feature.Rules.json";
 import ROUTES from "@/data/Routes";
 import Head from "next/head";
 import Link from "next/link";
 
 function Dashboard() {
-  const navigationCards = ROUTES.filter((r) => r.showInDashboard);
+  const { user } = useGlobalContext();
+  const isAdmin = user?.labels?.includes(ROLES.ADMIN);
+
+  const navigationCards = ROUTES.filter((r) => {
+    if (!r.showInDashboard) return false;
+    // Hide admin-only pages from organizers
+    if (!isAdmin && (r.path === "/stats" || r.path === "/students/bulk_upload")) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -47,4 +57,4 @@ function Dashboard() {
   );
 }
 
-export default withAuth(Dashboard, { role: ROLES.ADMIN });
+export default withAuth(Dashboard, { role: [ROLES.ADMIN, ROLES.ORGANIZER] });
