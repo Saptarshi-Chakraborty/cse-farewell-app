@@ -6,7 +6,10 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { Toaster } from "@/components/retroui/Sonner";
 import { Text } from "@/components/retroui/Text";
-import ScanQrBody from "@/components/ScanQr/Body";
+import dynamic from "next/dynamic";
+
+const ScanQrBody = dynamic(() => import("@/components/ScanQr/Body"), { ssr: false });
+
 import { ROLES } from "@/context/GlobalContext";
 import FeatureRule from "@/data/Feature.Rules.json";
 import Head from "next/head";

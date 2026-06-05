@@ -18,9 +18,12 @@ import Head from "next/head";
 import FeatureRule from "@/data/Feature.Rules.json";
 import { databases, DATABASE_ID, STUDENTS_COLLECTION_ID, Query, client } from "@/lib/appwrite";
 import { Student } from "@/lib/types";
-import { BarChart } from "@/components/retroui/charts/BarChart";
-import { PieChart } from "@/components/retroui/charts/PieChart";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/retroui/Button";
+
+const BarChart = dynamic(() => import("@/components/retroui/charts/BarChart").then(mod => mod.BarChart), { ssr: false });
+const PieChart = dynamic(() => import("@/components/retroui/charts/PieChart").then(mod => mod.PieChart), { ssr: false });
+
 import withAuth from "@/components/auth/AuthHOC";
 import { ROLES } from "@/context/GlobalContext";
 
